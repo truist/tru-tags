@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '1.5';
+$plugin['version'] = '1.6';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://truist.com/';
 $plugin['description'] = 'Tagging support with full integration';
@@ -24,10 +24,10 @@ if(0){
 	<p>This work is based on ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern.  It also contains code adapted from gdtroiano, see http://forum.textpattern.com/viewtopic.php?pid=102875#p102875.</p>
 	<h3>Configuration</h3>
 	<h4>Step 1: Create a new section</h4>
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn1212418134445703920a9c">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn150904287144457039258b8">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn75044894445a97c9a6870">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn527890945445a97c9ab68b">2</a></sup>:</p>
 	<p><img src="http://www.truist.com/images/2.png" height="280" width="398" alt="tag section configuration" class="diagram" /></p>
-	<p class="footnote" id="fn1212418134445703920a9c"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
-	<p class="footnote" id="fn150904287144457039258b8"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
+	<p class="footnote" id="fn75044894445a97c9a6870"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
+	<p class="footnote" id="fn527890945445a97c9ab68b"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
 	<h4>Step 2: Call the plugin from that section</h4>
 	<p>To make tag searching and the default tag cloud work, you&#8217;ll need to call <code>&lt;txp:tru_tags_handler /&gt;</code> from the page you chose in Step 1.  I replaced the default <code>&lt;txp:article /&gt;</code> with something like this:</p>
 <pre>&lt;txp:if_section name="tag"&gt;
@@ -45,9 +45,9 @@ if(0){
 <pre>&lt;txp:tru_tags_cloud /&gt;</pre>
 	<p>See below for lots of formatting options, including the ability to output a simple list instead of a cloud (using <code>tru_tags_list</code>).</p>
 	<h4>Step 5: Start tagging!</h4>
-	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup><a href="#fn1212418134445703920a9c">1</a></sup>.</p>
+	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup><a href="#fn75044894445a97c9a6870">1</a></sup>.</p>
 	<p>You&#8217;ll probably want to install Rob Sable&#8217;s <a href="http://www.wilshireone.com/textpattern-plugins/rss-admin-show-adv-opts">rss_admin_show_adv_opts</a>, which will automatically expand the &#8220;Advanced Options&#8221; section of the &#8220;write&#8221; page, when you are writing articles.  That gives you easy access to the Keywords field.</p>
-	<p class="footnote" id="fn1212418134445703920a9c"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.</p>
+	<p class="footnote" id="fn75044894445a97c9a6870"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.</p>
 	<h4>Step 6: Fancy display customization</h4>
 	<p>You can use <code>tru_tags_if_tag_search</code>, <code>tru_tags_tag_parameter</code>, and <code>tru_tags_search_parameter</code> to customize your page titles or tag search results.  See below for details.  See the titlebar of <a href="http://www.truist.com/">truist.com</a> for an example.</p>
 	<h4>Step 7: Turn on clean urls</h4>
@@ -91,6 +91,7 @@ RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tag&amp;t&#61;$1</p>
 	<p>If you don&#8217;t want to have the tags be links, you can set <code>generatelinks="0"</code> to turn the links off.</p>
 	<p>It also accepts a <code>tagsection</code> attribute, which tells tru_tags what relative url to use to find the &#8216;tag&#8217; section.  This can be useful if you have named the section something other than &#8216;tag&#8217;.  By default, this is set to <code>tag</code>.</p>
 	<p>If you have clean urls turned on (see above), you can use the <code>usereltags</code> attribute to specify whether links in the list should have the <a href="http://microformats.org/wiki/reltag"><code>rel="tag"</code></a>  (used by <a href="http://www.technorati.com/">Technorati</a>) attribute set.  Note that this won&#8217;t work if you turn off links.  Also note that tags don&#8217;t show up in the RSS/Atom feeds, unless you <a href="http://forum.textpattern.com/viewtopic.php?pid=40907#p40907">hack the textpattern source</a>.  This is on by default.</p>
+	<p>Again if you have clean urls turned on, you can use the <code>usenofollow</code> attribute to specify whether links in the list should have the <a href="http://googleblog.blogspot.com/2005/01/preventing-comment-spam.html"><code>rel="nofollow"</code></a> attribute set.  This is off by default.</p>
 	<h4><code>tru_tags_cloud</code></h4>
 	<h4><code>tru_tags_list</code></h4>
 	<p>These two tags do the exact same thing &#8211; <code>tru_tags_cloud</code> just provides different defaults to <code>tru_tags_list</code>.</p>
@@ -114,6 +115,7 @@ RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tag&amp;t&#61;$1</p>
 	</ul></li>
 		<li><code>countwrapchars</code>, which controls the characters used to show the tag count, if <code>showcounts</code> is turned on.  By default this is <code>[]</code>.  The first character will be put on the left side of the number, and the second character will be put on the right.  For example, a <code>countwrapchars</code> of <code>()</code> would show: <span class="pre"><a href="/?s=tag&#38;t=life">life</a> (3), <a href="/?s=tag&#38;t=tech">tech</a> (5)</span></li>
 		<li>If you have clean urls turned on (see above), you can use the <code>usereltags</code> attribute to specify whether links in the list should have the <a href="http://microformats.org/wiki/reltag"><code>rel="tag"</code></a>  (used by <a href="http://www.technorati.com/">Technorati</a>) attribute set.  This is off by default.</li>
+		<li>Again if you have clean urls turned on, you can use the <code>usenofollow</code> attribute to specify whether links in the list should have the <a href="http://googleblog.blogspot.com/2005/01/preventing-comment-spam.html"><code>rel="nofollow"</code></a> attribute set.  This is off by default.</li>
 		<li>If you don&#8217;t want the tags to be links, you can set <code>generatelinks="0"</code> to turn them off.</li>
 		<li><code>mintagcount</code> and <code>maxtagcount</code> can be used to hide tags that only have a few articles, or that have too many.  They are defaulted to <code>0</code> and <code>1000</code>, respectively.  For example, <code>mintagcount="2"</code> would hide any tags that were only associated with a single article.  If you do this, you may want to add a link to the default tag cloud, usually found at <code>/tag/</code>.</li>
 		<li>If you want to control the size(s) of the tags yourself (through CSS), set <code>setsizes="0"</code> to turn off the <code>style="font-size: XXX%"</code> attribute generation.  That will leave behind the default CSS classes, which you can use to control the display of your cloud.</li>
@@ -155,12 +157,14 @@ function tru_tags_handler($atts) {
 			if (strpos($keyword, '-') !== false)
 				$keywords[] = str_replace('-', ' ', $keyword);
 		}
-		print $atts['keywords'];
 		$atts['keywords'] = implode(',', $keywords);
+
 		if ($atts['section'] && strpos($atts['section'], ',') !== false)
 			$atts['section'] = '';
+
 		if (!$atts['limit'])
 			$atts['limit'] = '1000';
+		$atts['allowoverride'] = true;
 
 		return doArticles($atts, true);
 	} else {
@@ -193,27 +197,38 @@ function tru_tags_from_article($atts) {
 						'breakclass'	=> '',
 						'tagsection'	=> 'tag',
 						'usereltag'	=> '1',
-						'generatelinks'	=> '1'
+						'generatelinks'	=> '1',
+						'usenofollow'	=> ''
 						),$atts));
 
 	$tags_field = tru_tags_field();
 
 	$rs = safe_row($tags_field, "textpattern", "ID='$thisid' AND $tags_field <> ''");
-	$all_tags = explode(",", trim(strtolower($rs[$tags_field])));
+	$all_tags = explode(",", trim(mb_strtolower($rs[$tags_field], "UTF-8")));
 	sort($all_tags);
 	$all_tags = array_unique($all_tags);
 
 	if ($generatelinks) {
 		if (tru_tags_use_clean_urls()) {
 			$urlprefix = 'http://' . $siteurl . $path_from_root . $tagsection . '/';
-			$urlsuffix = $usereltag ? '/" rel="tag': '/';
+			if ($usereltag) {
+				if ($usenofollow) {
+					$urlsuffix = '/" rel="tag nofollow';
+				} else {
+					$urlsuffix = '/" rel="tag';
+				}
+			} else if ($usenofollow) {
+				$urlsuffix = '/" rel="nofollow';
+			} else {
+				$urlsuffix = '/';
+			}
 		} else {
 			$urlprefix = 'http://' . $siteurl . $path_from_root . '?s=' . $tagsection . '&amp;t=';
 			$urlsuffix = '';
 		}
 
 		for($i=0; $i<count($all_tags); $i++) {
-			$tags_html[] = '<a href="' . $urlprefix . str_replace(' ', '-', $all_tags[$i]) . $urlsuffix . '">' . $all_tags[$i] .'</a>';
+			$tags_html[] = '<a href="' . $urlprefix . str_replace(' ', '-', trim($all_tags[$i])) . $urlsuffix . '">' . trim($all_tags[$i]) .'</a>';
 		}
 	} else {
 		$tags_html = $all_tags;
@@ -263,7 +278,8 @@ function tru_tags_list($atts) {
 				'generatelinks'	=> '1',
 				'mintagcount'	=> '0',
 				'maxtagcount'	=> '1000',
-				'setsizes'	=> '1'
+				'setsizes'	=> '1',
+				'usenofollow'	=> ''
 			),$atts);
 	extract($atts);
 
@@ -283,7 +299,7 @@ function tru_tags_list($atts) {
 	$all_tags = array();
 	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4' and Posted < now()");
 	foreach ($rs as $row) {
-		$temp_array = explode(",", trim(strtolower($row[$tags_field])));
+		$temp_array = explode(",", trim(mb_strtolower($row[$tags_field], "UTF-8")));
 		for ($i = 0; $i < count($temp_array); $i++) {
 			$temp_array[$i] = trim($temp_array[$i]);
 		}
@@ -308,7 +324,17 @@ function tru_tags_list($atts) {
 	if ($generatelinks) {
 		if (tru_tags_use_clean_urls()) {
 			$urlprefix = 'http://' . $siteurl . $path_from_root . $tagsection . '/';
-			$urlsuffix = $usereltag ? '/" rel="tag': '/';
+			if ($usereltag) {
+				if ($usenofollow) {
+					$urlsuffix = '/" rel="tag nofollow';
+				} else {
+					$urlsuffix = '/" rel="tag';
+				}
+			} else if ($usenofollow) {
+				$urlsuffix = '/" rel="nofollow';
+			} else {
+				$urlsuffix = '/';
+			}
 		} else {
 			$urlprefix = 'http://' . $siteurl . $path_from_root . '?s=' . $tagsection . '&amp;t=';
 			$urlsuffix = '';
