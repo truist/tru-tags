@@ -4,9 +4,9 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '3.2';
+$plugin['version'] = '3.3';
 $plugin['author'] = 'Nathan Arthur';
-$plugin['author_uri'] = 'http://www.truist.com/';
+$plugin['author_uri'] = 'http://www.rainskit.com/';
 $plugin['description'] = 'Article tagging';
 $plugin['type'] = '1';
 $plugin['allow_html_help'] = '0';
@@ -17,7 +17,7 @@ if (!defined('txpinterface'))
 if(0){
 ?>
 # --- BEGIN PLUGIN HELP ---
-To learn more about tru_tags, check out the "introductory article":/blog/493/trutags-a-tagging-plugin-for-textpattern, "releases page":http://www.truist.com/reference/537/tru_tags-releases, "feature list":http://www.truist.com/reference/495/trutags-feature-list, "roadmap":http://www.truist.com/reference/554/tru_tags-roadmap, and "usage instructions":http://www.truist.com/reference/497/trutags-usage-instructions.
+To learn more about tru_tags, check out the "introductory article":http://www.rainskit.com/blog/493/trutags-a-tagging-plugin-for-textpattern, "releases page":http://www.rainskit.com/reference/537/tru_tags-releases, "feature list":http://www.rainskit.com/reference/495/trutags-feature-list, "roadmap":http://www.rainskit.com/reference/554/tru_tags-roadmap, and "usage instructions":http://www.rainskit.com/reference/497/trutags-usage-instructions.
 
 I've taken the detailed help out of the plugin; my apologies.  It was too big and too difficult to keep maintaining on my site and in the plugin.
 # --- END PLUGIN HELP ---
@@ -187,6 +187,7 @@ function tru_tags_search_parameter() {
 
 function tru_tags_related_tags_from_search($atts) {
 	$tag_parameter = tru_tags_tag_parameter(array(), false);
+	extract(lAtts(array('tag_parameter' => $tag_parameter),  $atts, 0));
 	if (!empty($tag_parameter)) {
         $tags_field = TRU_TAGS_FIELD;
 		$all_tags = array();
@@ -254,7 +255,8 @@ function tru_tags_get_standard_cloud_atts($atts, $isList, $isArticle) {
 			'linkpathtail'	=> '',
 			'filtersearch'	=> '1',
 			'excludesection'=> '',
-			'activeclass'	=> 'tagActive'
+			'activeclass'	=> 'tagActive',
+			'time'		=> 'past'
 		),$atts, 0);
 }
 
@@ -277,8 +279,22 @@ function tru_tags_cloud_query($atts) {
 	$filter = tru_tags_filter_sections($excludesection);
 	$filter .= ($filtersearch ? filterSearch() : '');
 
+	switch ($time) {
+		case 'any':
+			$time = ""; break;
+		case 'future':
+			$time = " and Posted > now()"; break;
+		default:
+			$time = " and Posted <= now()";
+	}
+	global $prefs;
+	extract($prefs);
+	if (!$publish_expired_articles) {
+		$time .= " and (now() <= Expires or Expires = ".NULLDATETIME.")";
+	}
+
 	$all_tags = array();
-	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4' and Posted < now()");
+	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4'" . $time);
 	foreach ($rs as $row) {
 		$temp_array = array();
 		if (array_key_exists($tags_field, $row)) {
@@ -539,14 +555,14 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 		'</td></tr><tr><td>'.
 			startTable('list', '', '', '', '300px').
 				tr(hCell(gTxt('tru_tags Reference'))).
-				tr(td('<a href="http://www.truist.com/reference/497/trutags-usage-instructions">Usage instructions</a>'.
+				tr(td('<a href="http://www.rainskit.com/reference/497/trutags-usage-instructions">Usage instructions</a>'.
 				'<br><a href="http://forum.textpattern.com/viewtopic.php?id=15084">Forum pages</a>'.
-				'<br><a href="http://www.truist.com/reference/537/tru_tags-releases">Releases page</a>'.
-				'<br><a href="http://www.truist.com/reference/554/tru_tags-roadmap">Release roadmap</a>'.
-				'<br><a href="http://www.truist.com/reference/495/trutags-feature-list">Feature list</a>'.
-				'<br><br><a href="http://www.truist.com/blog/493/trutags-a-tagging-plugin-for-textpattern">tru_tags</a>, by <a href="http://www.truist.com/">Nathan Arthur</a>'.
+				'<br><a href="http://www.rainskit.com/reference/537/tru_tags-releases">Releases page</a>'.
+				'<br><a href="http://www.rainskit.com/reference/554/tru_tags-roadmap">Release roadmap</a>'.
+				'<br><a href="http://www.rainskit.com/reference/495/trutags-feature-list">Feature list</a>'.
+				'<br><br><a href="http://www.rainskit.com/blog/493/trutags-a-tagging-plugin-for-textpattern">tru_tags</a>, by <a href="http://www.rainskit.com/">Nathan Arthur</a>'.
 				'<br><br>'.
-				'<div id="paypal"><form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_s-xclick" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" name="submit" alt="Make a donation to Nathan Arthur" /><img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /><input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHsQYJKoZIhvcNAQcEoIIHojCCB54CAQExggEwMIIBLAIBADCBlDCBjjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbGl2ZV9jZXJ0czERMA8GA1UEAxQIbGl2ZV9hcGkxHDAaBgkqhkiG9w0BCQEWDXJlQHBheXBhbC5jb20CAQAwDQYJKoZIhvcNAQEBBQAEgYCHhtbdCmSvEfV6jZd3tvydjD4ZPfA+BK/7gIs2riJk8nVXnkWJ6xHVapSImuZ+t1q/B3wChnWN940y51mu4KzreaNCQ26kcb+PiYmpva5UpByAYSRmtJDjWEOxspjI4x1KdLG3bNPbWns0Y/ZPKdeQv5sOWShNGPe8eyD/dO86KjELMAkGBSsOAwIaBQAwggEtBgkqhkiG9w0BBwEwFAYIKoZIhvcNAwcECDFaSGYgzfc4gIIBCM4cHP2gaqM60hX3mYe051FiOvKsYf9+srT/lJluBwoDZ/dVceUeG3sOk7mAXlTmTj7GEd8PK2pbEjXGR0x0OPZG+hjm/KE7uKAQCxR38WBwLvXOir7tE4UtZ1IHkSqa4Sk6LFYH5VftWqjTPxx9Aw58xaKm00SeTE9+vvj0PBczyb7JYyNRZf+8+6IgS+eeNCEUz4xWEVGuJbuHLGWRRmZSh+TKUlUwEsIjx3ZUDx+03uCdy5nBdWH4Xhz+M6J5rzYP9mJc1Y+xRSv176eLPABg6KJqjftMWrwuEyZ19Tplyea429YEAE5dZxWU2u25cmQcY1KzZitiBd6C/YRZGg3QvL0gm4uKY6CCA4cwggODMIIC7KADAgECAgEAMA0GCSqGSIb3DQEBBQUAMIGOMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxFDASBgNVBAoTC1BheVBhbCBJbmMuMRMwEQYDVQQLFApsaXZlX2NlcnRzMREwDwYDVQQDFAhsaXZlX2FwaTEcMBoGCSqGSIb3DQEJARYNcmVAcGF5cGFsLmNvbTAeFw0wNDAyMTMxMDEzMTVaFw0zNTAyMTMxMDEzMTVaMIGOMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxFDASBgNVBAoTC1BheVBhbCBJbmMuMRMwEQYDVQQLFApsaXZlX2NlcnRzMREwDwYDVQQDFAhsaXZlX2FwaTEcMBoGCSqGSIb3DQEJARYNcmVAcGF5cGFsLmNvbTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwUdO3fxEzEtcnI7ZKZL412XvZPugoni7i7D7prCe0AtaHTc97CYgm7NsAtJyxNLixmhLV8pyIEaiHXWAh8fPKW+R017+EmXrr9EaquPmsVvTywAAE1PMNOKqo2kl4Gxiz9zZqIajOm1fZGWcGS0f5JQ2kBqNbvbg2/Za+GJ/qwUCAwEAAaOB7jCB6zAdBgNVHQ4EFgQUlp98u8ZvF71ZP1LXChvsENZklGswgbsGA1UdIwSBszCBsIAUlp98u8ZvF71ZP1LXChvsENZklGuhgZSkgZEwgY4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEUMBIGA1UEChMLUGF5UGFsIEluYy4xEzARBgNVBAsUCmxpdmVfY2VydHMxETAPBgNVBAMUCGxpdmVfYXBpMRwwGgYJKoZIhvcNAQkBFg1yZUBwYXlwYWwuY29tggEAMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEFBQADgYEAgV86VpqAWuXvX6Oro4qJ1tYVIT5DgWpE692Ag422H7yRIr/9j/iKG4Thia/Oflx4TdL+IFJBAyPK9v6zZNZtBgPBynXb048hsP16l2vi0k5Q2JKiPDsEfBhGI+HnxLXEaUWAcVfCsQFvd2A1sxRr67ip5y2wwBelUecP3AjJ+YcxggGaMIIBlgIBATCBlDCBjjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbGl2ZV9jZXJ0czERMA8GA1UEAxQIbGl2ZV9hcGkxHDAaBgkqhkiG9w0BCQEWDXJlQHBheXBhbC5jb20CAQAwCQYFKw4DAhoFAKBdMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA3MDEyNDE3MzkxMVowIwYJKoZIhvcNAQkEMRYEFC+Tlv4vlrIQEMEEYL2bMUo7ouXIMA0GCSqGSIb3DQEBAQUABIGAf8zWKjxVGpLI9RYs5mmitXljqoqZdULD+r658w28QDmIa9vMfDhV0AekWWTC+Xi0vqNXxnw190FF6IQQ69yU7JKbNa0dOJ5rYoT51JraKDV4S54sC0uAXFvTuU+IQ1J9IOVZilczWz1gRy5N6RsYhTfgcavbS9MqeKhzK2hVKfY=-----END PKCS7-----" /></form></div>'
+				'<div id="paypal"><form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_s-xclick" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" name="submit" alt="Make a donation to Nathan Arthur" /><img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /><input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----"></form></div>'
 				)).
 			endTable().
 		'</td></tr>'.endTable().
@@ -789,7 +805,9 @@ function tru_tags_admin_delete_redirect($lefttag) {
 
 
 function tru_tags_admin_write_tab_handler($event, $step) {
-	$cloud = array_unique(tru_tags_cloud_query(tru_tags_get_standard_cloud_atts(array(), true, true)));
+	$atts = tru_tags_get_standard_cloud_atts(array(), true, true);
+	$atts['time'] = 'any';
+	$cloud = array_unique(tru_tags_cloud_query($atts));
 	sort($cloud);
 
 	$id = (empty($GLOBALS['ID']) ? gps('ID') : $GLOBALS['ID']);
