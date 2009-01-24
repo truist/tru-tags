@@ -4,10 +4,10 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '2.1';
+$plugin['version'] = '2.2';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.truist.com/';
-$plugin['description'] = 'Tagging support for Textpattern';
+$plugin['description'] = 'Article tagging';
 $plugin['type'] = '1';
 $plugin['allow_html_help'] = '0';
  
@@ -91,7 +91,10 @@ function tru_tags_list($atts) {
 
 
 function tru_tags_from_article($atts) {
-	$all_tags = tru_tags_get_tags_for_article();
+	global $thisarticle;
+	extract($thisarticle);
+
+	$all_tags = tru_tags_get_tags_for_article($thisid);
 
 	$atts = tru_tags_get_standard_cloud_atts($atts, false, true);
 	$all_tags_for_weight = $all_tags;
@@ -209,7 +212,8 @@ function tru_tags_get_standard_cloud_atts($atts, $isList, $isArticle) {
 			'linkpath'	=> '',
 			'linkpathtail'	=> '',
 			'filtersearch'	=> '1',
-			'excludesection'=> ''
+			'excludesection'=> '',
+			'activeclass'	=> 'tagActive'
 		),$atts, 0);
 }
 
@@ -344,6 +348,7 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 	}
 	$stepvalue = ($max == $min) ? 0 : ($maxpercent - $minpercent) / ($max - $min);
 
+	$tag_search_tag = tru_tags_tag_parameter(array('striphyphens' => '1'));
 	foreach ($tags_weight as $tag => $weight) {
 		$tag_weight = floor($minpercent + ($weight - $min) * $stepvalue);
 
@@ -354,13 +359,17 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 		$tag_class = '';
 		if ($setclasses) {
 			$tag_class = ' class="';
-			if ($weight == $min)
+			if ($weight == $min) {
 				$tag_class .= "tagSizeSmallest";
-			else if ($weight == $max)
+			} else if ($weight == $max) {
 				$tag_class .= "tagSizeLargest";
-			else
+			} else {
 				$tag_class .= "tagSizeMedium";
+			}
 			$tag_class .= ' tagSize' . ($weight + 1 - $min);
+			if ($tag == $tag_search_tag) {
+				$tag_class .= ' ' . $activeclass;
+			}
 			$tag_class .= '"';
 		}
 
@@ -406,8 +415,9 @@ if (TRU_TAGS_USE_CLEAN_URLS) {
 }
 
 function tru_tags_clean_url_handler($event, $step) {
-	$subpath = preg_quote(preg_replace("/https?:\/\/.*(\/.*)/Ui","$1",hu),'/');
-	$req = preg_replace("/^$subpath/i",'/',$_SERVER['REQUEST_URI']);
+	$subpath = preg_replace("/https?:\/\/.*(\/.*)/Ui","$1",hu);
+	$regsafesubpath = preg_quote($subpath, '/');
+	$req = preg_replace("/^$regsafesubpath/i",'/',$_SERVER['REQUEST_URI']);
 
 	$qs = strpos($req, '?');
 	$qatts = ($qs ? '&'.substr($req, $qs + 1) : '');
@@ -417,7 +427,6 @@ function tru_tags_clean_url_handler($event, $step) {
 	if (count($parts) == 2 && $parts[0] == TRU_TAGS_SECTION) {
 		$tag = $parts[1];
 		$_SERVER['QUERY_STRING'] = TRU_TAGS_TAG_PARAMETER_NAME . '=' . $tag . $qatts;
-		//$_SERVER['REQUEST_URI'] = $subpath . TRU_TAGS_SECTION . '/?' . $_SERVER['QUERY_STRING'];
 		$_SERVER['REQUEST_URI'] = $subpath . TRU_TAGS_SECTION . '/?' . $_SERVER['QUERY_STRING'];
 		if (count($_POST) > 0) {
 			$_POST['section'] = TRU_TAGS_SECTION;
@@ -439,11 +448,17 @@ if (TRU_TAGS_SHOW_TAGS_IN_ADMIN)
 function tru_tags_admin_handler($event, $step) {
 	$cloud = array_unique(tru_tags_cloud_query(tru_tags_get_standard_cloud_atts(array(), true, true)));
 	sort($cloud);
+
+	$id = (empty($GLOBALS['ID']) ? gps('ID') : $GLOBALS['ID']);
+	$article_tags = (empty($id) ? array() : tru_tags_get_tags_for_article($id));
+
 	$links = array();
 	foreach ($cloud as $tag) {
-		$links[] = '<a href="#advanced" onclick="addTag(\\\''.$tag.'\\\'); return false;">' . htmlspecialchars($tag) . '<\/a>';
+		$style = (in_array($tag, $article_tags) ? ' class="tag_chosen"' : '');
+		$links[] = '<a href="#advanced"'.$style.' onclick="this.setAttribute(\\\'class\\\', toggleTag(\\\''.$tag.'\\\')); return false;">' . htmlspecialchars($tag) . '<\/a>';
 	}
 	$to_insert = join(', ', $links);
+	$to_insert = "<style>a.tag_chosen{background-color: #FEB; color: black;}</style>" . $to_insert;
 
 	$js = <<<EOF
 var keywordsField = document.getElementById('keywords');
@@ -454,15 +469,21 @@ cloud.setAttribute('class', 'tru_tags_admin_tags');
 cloud.innerHTML = '{$to_insert}';
 parent.appendChild(cloud);
 
-function addTag(tagName) {
+function toggleTag(tagName) {
+	var tagRegex = new RegExp("((^|,)\\\s*)" + tagName + "\\\s*(,\\\s*|$)");
 	var textarea = document.getElementById('keywords');
-	var curval = textarea.value.replace(/\s+$/, '');
-	if ('' == curval)
+	var curval = textarea.value.replace(/,?\s+$/, '');
+	if ('' == curval) {
 		textarea.value = tagName;
-	else if (',' == curval.charAt(curval.length - 1))
+	} else if (curval.match(tagRegex)) {
+		textarea.value = curval.replace(tagRegex, '$1').replace(/,?\s+$/, '');
+		return '';
+	} else if (',' == curval.charAt(curval.length - 1)) {
 		textarea.value += ' ' + tagName;
-	else
+	} else {
 		textarea.value += ', ' + tagName;
+	}
+	return 'tag_chosen';
 }
 EOF;
 
@@ -479,7 +500,10 @@ register_callback('tru_tags_rss_handler', 'rss_entry');
 function tru_tags_rss_handler($event, $step) { return tru_tags_feed_handler(false); }
 
 function tru_tags_feed_handler($atom) {
-	$tags = tru_tags_get_tags_for_article();
+	global $thisarticle;
+	extract($thisarticle);
+
+	$tags = tru_tags_get_tags_for_article($thisid);
 
 	if (TRU_TAGS_ADD_TAGS_TO_FEED_BODY) {
 		$extrabody = '';
@@ -515,12 +539,9 @@ function tru_tags_feed_handler($atom) {
 ### OTHER SUPPORT FUNCTIONS ###
 ###############################
 
-function tru_tags_get_tags_for_article() {
-	global $thisarticle;
-	extract($thisarticle);
-
+function tru_tags_get_tags_for_article($articleID) {
 	$tags_field = TRU_TAGS_FIELD;
-	$rs = safe_row($tags_field, "textpattern", "ID='$thisid' AND $tags_field <> ''");
+	$rs = safe_row($tags_field, "textpattern", "ID='$articleID' AND $tags_field <> ''");
 	$all_tags = explode(",", trim(tru_tags_strtolower($rs[$tags_field])));
 
 	return tru_tags_trim_tags($all_tags);
