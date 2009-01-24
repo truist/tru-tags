@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '2.2';
+$plugin['version'] = '2.3';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.truist.com/';
 $plugin['description'] = 'Article tagging';
@@ -348,6 +348,7 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 	}
 	$stepvalue = ($max == $min) ? 0 : ($maxpercent - $minpercent) / ($max - $min);
 
+	$tags_html = array();
 	$tag_search_tag = tru_tags_tag_parameter(array('striphyphens' => '1'));
 	foreach ($tags_weight as $tag => $weight) {
 		$tag_weight = floor($minpercent + ($weight - $min) * $stepvalue);
@@ -455,7 +456,7 @@ function tru_tags_admin_handler($event, $step) {
 	$links = array();
 	foreach ($cloud as $tag) {
 		$style = (in_array($tag, $article_tags) ? ' class="tag_chosen"' : '');
-		$links[] = '<a href="#advanced"'.$style.' onclick="this.setAttribute(\\\'class\\\', toggleTag(\\\''.$tag.'\\\')); return false;">' . htmlspecialchars($tag) . '<\/a>';
+		$links[] = '<a href="#advanced"'.$style.' onclick="this.setAttribute(\\\'class\\\', toggleTag(\\\''.addslashes(addslashes($tag)).'\\\')); return false;">' . addslashes(htmlspecialchars($tag)) . '<\/a>';
 	}
 	$to_insert = join(', ', $links);
 	$to_insert = "<style>a.tag_chosen{background-color: #FEB; color: black;}</style>" . $to_insert;
@@ -470,7 +471,8 @@ cloud.innerHTML = '{$to_insert}';
 parent.appendChild(cloud);
 
 function toggleTag(tagName) {
-	var tagRegex = new RegExp("((^|,)\\\s*)" + tagName + "\\\s*(,\\\s*|$)");
+	var regexTag = tagName.replace(/([\\\\\^\\$*+[\\]?{}.=!:(|)])/g,"\\\\$1");
+	var tagRegex = new RegExp("((^|,)\\\s*)" + regexTag + "\\\s*(,\\\s*|$)");
 	var textarea = document.getElementById('keywords');
 	var curval = textarea.value.replace(/,?\s+$/, '');
 	if ('' == curval) {
@@ -570,7 +572,7 @@ function tru_tags_trim_tags($tag_array) {
 
 
 function tru_tags_fixup_query_atts($atts, $tag_parameter) {
-	$keywords = explode(',', $tag_parameter);
+	$keywords = explode(',', quotemeta($tag_parameter));
 	foreach ($keywords as $keyword) {
 		if (strpos($keyword, '-') !== false) {
 			$keywords[] = str_replace('-', ' ', $keyword);
