@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '1.3';
+$plugin['version'] = '1.4';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://truist.com/';
 $plugin['description'] = 'Tagging support with full integration';
@@ -24,10 +24,10 @@ if(0){
 	<p>This work is based on ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern.  It also contains code adapted from gdtroiano, see http://forum.textpattern.com/viewtopic.php?pid=102875#p102875.</p>
 	<h3>Configuration</h3>
 	<h4>Step 1: Create a new section</h4>
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn957471543441485ac2965f">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn2133299049441485ac2e478">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn19922351764425db3189231">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn15898029464425db318e07e">2</a></sup>:</p>
 	<p><img src="http://www.truist.com/images/2.png" height="280" width="398" alt="tag section configuration" class="diagram" /></p>
-	<p class="footnote" id="fn957471543441485ac2965f"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
-	<p class="footnote" id="fn2133299049441485ac2e478"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
+	<p class="footnote" id="fn19922351764425db3189231"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
+	<p class="footnote" id="fn15898029464425db318e07e"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
 	<h4>Step 2: Call the plugin from that section</h4>
 	<p>To make tag searching and the default tag cloud work, you&#8217;ll need to call <code>&lt;txp:tru_tags_handler /&gt;</code> from the page you chose in Step 1.  I replaced the default <code>&lt;txp:article /&gt;</code> with something like this:</p>
 <pre>&lt;txp:if_section name="tag"&gt;
@@ -45,11 +45,12 @@ if(0){
 <pre>&lt;txp:tru_tags_cloud /&gt;</pre>
 	<p>See below for lots of formatting options, including the ability to output a simple list instead of a cloud (using <code>tru_tags_list</code>).</p>
 	<h4>Step 5: Start tagging!</h4>
-	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;write&#8221; page.)  Tags should be separated by commas, and can have spaces.  Be careful not to leave spaces at the beginning and end of tags.  Here&#8217;s a good example:</p>
+	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup><a href="#fn19922351764425db3189231">1</a></sup>.  Be careful not to leave spaces at the beginning and end of tags.  Here&#8217;s a good example:</p>
 	<p><img src="http://www.truist.com/images/3.png" height="110" width="118" alt="tags with spaces, but not next to the commas" class="diagram" /></p>
 	<p>...and a bad one:</p>
 	<p><img src="http://www.truist.com/images/4.png" height="112" width="119" alt="tags with spaces after the commas (WRONG)" class="diagram" /></p>
 	<p>You&#8217;ll probably want to install Rob Sable&#8217;s <a href="http://www.wilshireone.com/textpattern-plugins/rss-admin-show-adv-opts">rss_admin_show_adv_opts</a>, which will automatically expand the &#8220;Advanced Options&#8221; section of the &#8220;write&#8221; page, when you are writing articles.  That gives you easy access to the Keywords field.</p>
+	<p class="footnote" id="fn19922351764425db3189231"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.</p>
 	<h4>Step 6: Fancy display customization</h4>
 	<p>You can use <code>tru_tags_if_tag_search</code>, <code>tru_tags_tag_parameter</code>, and <code>tru_tags_search_parameter</code> to customize your page titles or tag search results.  See below for details.  See the titlebar of <a href="http://www.truist.com/">truist.com</a> for an example.</p>
 	<h4>Step 7: Turn on clean urls</h4>
@@ -71,13 +72,13 @@ if(0){
 RewriteBase /<br />
 #If you're using a section other than &#34;tag&#34;, change the following two rules accordingly<br />
 RewriteRule &#94;tag/([&#94;/]&#43;)$ tag/$1/ [R,L]<br />
-RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tagx&#37;x&#37;t&#61;$1</p>
+RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tag&amp;t&#61;$1</p>
 	<p></div></p>
 	<ol>
 		<li><strong>Check to make sure your site is still working.</strong></li>
 		<li>Edit the tru_tags plugin (admin -> plugins, click &#8216;Edit&#8217;) and change the <code>tru_tags_use_clean_urls()</code> function to return <code>1</code>.  (It&#8217;s the first function.)</li>
 		<li>Clean urls should be working now.  Try clicking a tag link to see what url it references.</li>
-		<li>By default, article tags will use the <code>rel="tag"</code> attribute, and the tag cloud (or list) won&#8217;t.  This can be controlled with the <code>usereltag</code> attribute; see below for details.</li>
+		<li>By default, article tags will set the <code>rel="tag"</code> attribute, and the tag cloud (or list) won&#8217;t.  This can be controlled with the <code>usereltag</code> attribute; see below for details.</li>
 	</ol>
 	<h3>Tag reference</h3>
 	<h4><code>tru_tags_handler</code></h4>
@@ -88,15 +89,19 @@ RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tagx&#37;x&#37;t&#61;$1</p>
 	<h4><code>tru_tags_if_has_tags</code></h4>
 	<p>This conditional tag can be used in an article form, and will evaluate its contents (e.g. &#8220;return true&#8221;) if the current article has tags.</p>
 	<h4><code>tru_tags_from_article</code></h4>
-	<p>This tag can be used in an article form to return a list of tags associated with the current article.  Each tag in the list will be a link (<code>&lt;a href=...&gt;</code>) to the tag search url for that particular tag.</p>
-	<p>This tag accepts the standard <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes.</p>
+	<p>This tag can be used in an article form to return a list of tags associated with the current article.  Typically (see below), each tag in the list will be a link (<code>&lt;a href=...&gt;</code>) to the tag search url for that particular tag.</p>
+	<p>This tag accepts the standard <code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes.</p>
+	<p>If you don&#8217;t want to have the tags be links, you can set <code>generatelinks="0"</code> to turn the links off.</p>
 	<p>It also accepts a <code>tagsection</code> attribute, which tells tru_tags what relative url to use to find the &#8216;tag&#8217; section.  This can be useful if you have named the section something other than &#8216;tag&#8217;.  By default, this is set to <code>tag</code>.</p>
-	<p>If you have clean urls turned on (see above), you can use the <code>usereltags</code> attribute to specify whether links in the list should have the <a href="http://microformats.org/wiki/reltag"><code>rel="tag"</code></a>  (used by <a href="http://www.technorati.com/">Technorati</a>) attribute set.  This is on by default.</p>
+	<p>If you have clean urls turned on (see above), you can use the <code>usereltags</code> attribute to specify whether links in the list should have the <a href="http://microformats.org/wiki/reltag"><code>rel="tag"</code></a>  (used by <a href="http://www.technorati.com/">Technorati</a>) attribute set.  Note that this won&#8217;t work if you turn off links.  Also note that tags don&#8217;t show up in the RSS/Atom feeds, unless you <a href="http://forum.textpattern.com/viewtopic.php?pid=40907#p40907">hack the textpattern source</a>.  This is on by default.</p>
 	<h4><code>tru_tags_cloud</code></h4>
 	<h4><code>tru_tags_list</code></h4>
 	<p>These two tags do the exact same thing &#8211; <code>tru_tags_cloud</code> just provides different defaults to <code>tru_tags_list</code>.</p>
 <p><code>tru_tags_cloud</code> can be used on any page, and is generally used to generate a simple tag cloud of all the tags used on your site.  The cloud is really just a list of links, much like that generated by <code>tru_tags_from_article</code>, but with a <code>style</code> attribute set on each link to give it a font size ranging from 100% to 200%.</p>
 <p><code>tru_tags_list</code> can be used on any page, and is generally used to output a bulleted list of all the tags used on your site.  By default, the tags will all have a font-size of 100%.</p>
+<p><code>tru_tags_cloud</code> and <code>tru_tags_list</code> both set the <code>class</code> attribute of each tag, specifying two classes.  The first class groups the tags into categories, with classes of <code>tagSizeSmallest</code>, <code>tagSizeMedium</code>, and <code>tagSizeLargest</code>.  Using these, you could make the smallest and largest tags have different styles than all the others.</p>
+	<p>The second class indicates the &#8220;step&#8221; of the current tag, with classes of <code>tagSize1</code>, <code>tagSize2</code>, and so on.  These give you precise control over each tag size, if you want it.</p>
+	<p>If you use these classes to create special CSS rules, you may also want to set the <code>setsizes</code> attribute, described below.</p>
 	<h5>Both tags accept the following attributes:</h5>
 	<ul>
 		<li>The standard <code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes.  <code>tru_tags_cloud</code> has a default <code>break</code> of a comma.  <code>tru_tags_list</code> has a default <code>wraptag</code> of <code>ul</code> and a default <code>break</code> of <code>li</code>.</li>
@@ -106,9 +111,15 @@ RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tagx&#37;x&#37;t&#61;$1</p>
 		<li><strong>Note:</strong> if you use <code>section</code> to limit the cloud to a particular section, it won&#8217;t limit the tag search feature to that section.  The tag search finds (tagged) articles from all sections, no matter what.  That&#8217;s a side-effect of the use of <code>doArticles()</code>, and I don&#8217;t think there&#8217;s anything I can do about it.</li>
 	</ul></li>
 		<li><code>minpercent</code> and <code>maxpercent</code>, which can be used to control the weighted font sizes in the tag cloud/list.  <code>tru_tags_cloud</code> defaults to <code>100</code> and <code>200</code>, respectively, and <code>tru_tags_list</code> defaults to <code>100</code> and <code>100</code>.</li>
-		<li><code>showcounts</code>, which will append a number indicating the number of times a tag has been used, to each tag in the list.  For example, you might see: <span class="pre"><a href="/?s=tag&#38;t=life">life</a> [3], <a href="/?s=tag&#38;t=tech">tech</a> [5]</span> in my tag cloud, if this was turned on.  This is off by default.  Use <code>1</code> or <code>true</code> to turn it on.</li>
+		<li><code>showcounts</code>, which will append a number indicating the number of times a tag has been used, to each tag in the list.  For example, you might see: <span class="pre"><a href="/?s=tag&#38;t=life">life</a> [3], <a href="/?s=tag&#38;t=tech">tech</a> [5]</span> in my tag cloud, if this was turned on.  This is off by default.  Use <code>1</code> or <code>true</code> to turn it on.
+	<ul>
+		<li>This can also be used to put the counts in the <code>title</code> attribute of the links, which will make it appear in a tooltip.  Use <code>showcounts="title"</code> or <code>showcounts="both"</code> (to show it in both places) to turn it on.</li>
+	</ul></li>
 		<li><code>countwrapchars</code>, which controls the characters used to show the tag count, if <code>showcounts</code> is turned on.  By default this is <code>[]</code>.  The first character will be put on the left side of the number, and the second character will be put on the right.  For example, a <code>countwrapchars</code> of <code>()</code> would show: <span class="pre"><a href="/?s=tag&#38;t=life">life</a> (3), <a href="/?s=tag&#38;t=tech">tech</a> (5)</span></li>
-		<li>If you have clean urls turned on (see above), you can use the <code>usereltags</code> attribute to specify whether links in the list should have the <a href="http://microformats.org/wiki/reltag"><code>rel="tag"</code></a>  (used by <a href="http://www.technorati.com/">Technorati</a>) attribute set.  This is on by default.</li>
+		<li>If you have clean urls turned on (see above), you can use the <code>usereltags</code> attribute to specify whether links in the list should have the <a href="http://microformats.org/wiki/reltag"><code>rel="tag"</code></a>  (used by <a href="http://www.technorati.com/">Technorati</a>) attribute set.  This is off by default.</li>
+		<li>If you don&#8217;t want the tags to be links, you can set <code>generatelinks="0"</code> to turn them off.</li>
+		<li><code>mintagcount</code> and <code>maxtagcount</code> can be used to hide tags that only have a few articles, or that have too many.  They are defaulted to <code>0</code> and <code>1000</code>, respectively.  For example, <code>mintagcount="2"</code> would hide any tags that were only associated with a single article.  If you do this, you may want to add a link to the default tag cloud, usually found at <code>/tag/</code>.</li>
+		<li>If you want to control the size(s) of the tags yourself (through CSS), set <code>setsizes="0"</code> to turn off the <code>style="font-size: XXX%"</code> attribute generation.  That will leave behind the default CSS classes, which you can use to control the display of your cloud.</li>
 	</ul>
 	<p>Note that you can use the attributes to make each tag do the same thing.  <code>tru_tags_cloud</code> is just a convenience function for generating a tag cloud using <code>tru_tags_list</code>.  Therefore, it&#8217;s possible to have a tag cloud with tag counts showing, or have a bulleted list with variable font sizes, etc.</p>
 	<h4><code>tru_tags_if_tag_search</code></h4>
@@ -141,17 +152,22 @@ function tru_tags_use_clean_urls()
 
 function tru_tags_handler($atts) {
 	extract($_GET);
-	if (!isset($t)) {
-		return tru_tags_cloud($atts);
-	}
-	else {
-		$atts['keywords'] = strip_tags($t);
+	if (isset($t)) {
+		$keywords = explode(',', strip_tags($t));
+		foreach ($keywords as $keyword) {
+			if (strpos($keyword, '-') !== false)
+				$keywords[] = str_replace('-', ' ', $keyword);
+		}
+		print $atts['keywords'];
+		$atts['keywords'] = implode(',', $keywords);
 		if ($atts['section'] && strpos($atts['section'], ',') !== false)
 			$atts['section'] = '';
 		if (!$atts['limit'])
 			$atts['limit'] = '1000';
 
 		return doArticles($atts, true);
+	} else {
+		return tru_tags_cloud($atts);
 	}
 }
 
@@ -179,7 +195,8 @@ function tru_tags_from_article($atts) {
 						'class'         => '',
 						'breakclass'	=> '',
 						'tagsection'	=> 'tag',
-						'usereltag'	=> '1'
+						'usereltag'	=> '1',
+						'generatelinks'	=> '1'
 						),$atts));
 
 	$tags_field = tru_tags_field();
@@ -189,17 +206,22 @@ function tru_tags_from_article($atts) {
 	sort($all_tags);
 	$all_tags = array_unique($all_tags);
 
-	if (tru_tags_use_clean_urls()) {
-		$urlprefix = 'http://' . $siteurl . $path_from_root . $tagsection . '/';
-		$urlsuffix = $usereltag ? '/" rel="tag': '/';
+	if ($generatelinks) {
+		if (tru_tags_use_clean_urls()) {
+			$urlprefix = 'http://' . $siteurl . $path_from_root . $tagsection . '/';
+			$urlsuffix = $usereltag ? '/" rel="tag': '/';
+		} else {
+			$urlprefix = 'http://' . $siteurl . $path_from_root . '?s=' . $tagsection . '&amp;t=';
+			$urlsuffix = '';
+		}
+
+		for($i=0; $i<count($all_tags); $i++) {
+			$tags_html[] = '<a href="' . $urlprefix . str_replace(' ', '-', $all_tags[$i]) . $urlsuffix . '">' . $all_tags[$i] .'</a>';
+		}
 	} else {
-		$urlprefix = 'http://' . $siteurl . $path_from_root . '?s=' . $tagsection . '&amp;t=';
-		$urlsuffix = '';
+		$tags_html = $all_tags;
 	}
 
-	for($i=0; $i<count($all_tags); $i++) {
-		$tags_html[] = '<a href="' . $urlprefix . $all_tags[$i] . $urlsuffix . '">' . $all_tags[$i] .'</a>';
-	}
 	return doWrap($tags_html, $wraptag, $break, $class, $breakclass);
 }
 
@@ -215,7 +237,11 @@ function tru_tags_cloud($atts) {
 				'maxpercent'	=> '200',
 				'showcounts'	=> '',
 				'countwrapchars'	=> '[]',
-				'usereltag'	=> ''
+				'usereltag'	=> '',
+				'generatelinks'	=> '1',
+				'mintagcount'	=> '0',
+				'maxtagcount'	=> '1000',
+				'setsizes'	=> '1'
 			),$atts);
 
 	return tru_tags_list($atts);
@@ -236,7 +262,11 @@ function tru_tags_list($atts) {
 				'maxpercent'	=> '100',
 				'showcounts'	=> '',
 				'countwrapchars'	=> '[]',
-				'usereltag'	=> ''
+				'usereltag'	=> '',
+				'generatelinks'	=> '1',
+				'mintagcount'	=> '0',
+				'maxtagcount'	=> '1000',
+				'setsizes'	=> '1'
 			),$atts);
 	extract($atts);
 
@@ -263,20 +293,42 @@ function tru_tags_list($atts) {
 	$tags_weight = array_count_values($all_tags);
 	$tags_unique = array_unique($all_tags);
 
+	foreach ($tags_unique as $key => $tag) {
+		if ($tags_weight[$tag] < $mintagcount || $tags_weight[$tag] > $maxtagcount) {
+			unset($tags_unique[$key]);
+			unset($tags_weight[$tag]);
+		}
+	}
+
 	$max = max($tags_weight);
 	$min = min($tags_weight);
 	$stepvalue = ($max == $min) ? 0 : ($maxpercent - $minpercent) / ($max - $min);
 
-	if (tru_tags_use_clean_urls()) {
-		$urlprefix = 'http://' . $siteurl . $path_from_root . $tagsection . '/';
-		$urlsuffix = $usereltag ? '/" rel="tag': '/';
-	} else {
-		$urlprefix = 'http://' . $siteurl . $path_from_root . '?s=' . $tagsection . '&amp;t=';
-		$urlsuffix = '';
+	if ($generatelinks) {
+		if (tru_tags_use_clean_urls()) {
+			$urlprefix = 'http://' . $siteurl . $path_from_root . $tagsection . '/';
+			$urlsuffix = $usereltag ? '/" rel="tag': '/';
+		} else {
+			$urlprefix = 'http://' . $siteurl . $path_from_root . '?s=' . $tagsection . '&amp;t=';
+			$urlsuffix = '';
+		}
 	}
 
 	foreach ($tags_unique as $tag) {
-		$tag_weight = $minpercent + ($tags_weight[$tag] - $min) * $stepvalue;
+		$tag_weight = floor($minpercent + ($tags_weight[$tag] - $min) * $stepvalue);
+
+		if ($setsizes)
+			$style = ' style="font-size: ' . $tag_weight . '%;"';
+
+		$tag_class = ' class="';
+		if ($tags_weight[$tag] == $min)
+			$tag_class .= "tagSizeSmallest";
+		else if ($tags_weight[$tag] == $max)
+			$tag_class .= "tagSizeLargest";
+		else
+			$tag_class .= "tagSizeMedium";
+		$tag_class .= ' tagSize' . ($tags_weight[$tag] + 1 - $min);
+		$tag_class .= '"';
 
 		//adapted from code by gdtroiano, see http://forum.textpattern.com/viewtopic.php?pid=102875#p102875
 		$count = $countwrapchars{0} . $tags_weight[$tag] . $countwrapchars{1};
@@ -285,7 +337,12 @@ function tru_tags_list($atts) {
 		if ($showcounts && $showcounts != 'title')
 			$displaycount = ' ' . $count;
 
-		$tags_html[] = '<a href="' . $urlprefix . $tag . $urlsuffix . '" style="font-size:'. $tag_weight . '%;"' . $titlecount . '>' . $tag .'</a>' . $displaycount;
+		if ($generatelinks) {
+			$wholeurl = '"' . $urlprefix . str_replace(' ', '-', $tag) . $urlsuffix . '"';
+			$tags_html[] = '<a href=' . $wholeurl . $tag_class . $style . $titlecount . '>' . $tag . '</a>' . $displaycount;
+		} else {
+			$tags_html[] = '<span' . $tag_class . $style . $titlecount . '>' . $tag . '</span>' . $displaycount;
+		}
 	}
 
 	return doWrap($tags_html, $wraptag, $break, $class, $breakclass);
