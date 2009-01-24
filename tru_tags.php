@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '2.3';
+$plugin['version'] = '3.0';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.truist.com/';
 $plugin['description'] = 'Article tagging';
@@ -33,34 +33,21 @@ I've taken the detailed help out of the plugin; my apologies.  It was too big an
 ### CONFIGURATION ###
 #####################
 
-#See http://www.truist.com/reference/497/trutags-usage-instructions for instructions
+# TURN BACK!  Configuration is no longer handled by editing the plugin.
+# Check out the 'Extensions' tab in the Textpattern admin :)
 
-# Switch this to '1' to get clean url support or '0' to turn it off.
-# It will probably figure it out, though, so you shouldn't have to change it.
-global $permlink_mode;
-define('TRU_TAGS_USE_CLEAN_URLS', $permlink_mode != 'messy');
 
-# This tells tru_tags which section to use for tags.
-define('TRU_TAGS_SECTION', 'tag');
-
-# This tells tru_tags what attribute name to use for tag searches.
-define('TRU_TAGS_TAG_PARAMETER_NAME', 't');
-
-# This tells tru_tags to put tags into the RSS and Atom feeds, in 'Category' elements.
-# You probably want this.
-define('TRU_TAGS_ADD_TAGS_TO_FEED_XML', 1);
-
-# By default, this will append a tag list like "tags: trees, flowers, animals, etc"
-# (with links, and with rel="tag") to the body of RSS/Atom feeds. If you define a
-# 'misc' form named tru_tags_feed_tags, tru_tags will use that form to render the tags
-# for the feed, instead.
-define('TRU_TAGS_ADD_TAGS_TO_FEED_BODY', 0);
-
-# This shows a list of clickable tags in the admin side on the 'Write' page
-define('TRU_TAGS_SHOW_TAGS_IN_ADMIN', 1);
-
-# Changing this won't do any good.  It's just here as a convenience for development.
+# Changing these won't do any good.  They're just here as a convenience for development.
 define('TRU_TAGS_FIELD', 'Keywords');
+define('CLEAN_URLS', 'clean_urls');
+define('TAG_SECTION', 'tag_section');
+define('PARM_NAME', 'parm');
+define('TAGS_IN_FEED_CATEGORIES', 'tags_in_feed_categories');
+define('TAGS_IN_FEED_BODY', 'tags_in_feed_body');
+define('TAGS_IN_WRITE_TAB', 'tags_in_write_tab');
+
+global $tru_tags_prefs;
+$tru_tags_prefs = tru_tags_load_prefs();
 
 
 ### PRIMARY TAG FUNCTIONS ###
@@ -69,8 +56,20 @@ define('TRU_TAGS_FIELD', 'Keywords');
 function tru_tags_handler($atts) {
 	$tag_parameter = tru_tags_tag_parameter(array(), false);
 	if (!empty($tag_parameter)) {
-		$atts = tru_tags_fixup_query_atts($atts, $tag_parameter);
-		return doArticles($atts, true);		#function in TXP code
+		if (tru_tags_redirect_if_needed($tag_parameter)) {
+			return '';
+		}
+		$clean_atts = tru_tags_fixup_query_atts($atts, $tag_parameter);
+		$result = doArticles($clean_atts, true);		#function in TXP code
+		if (trim($result) == '') {
+			if (isset($atts['noarticles'])) {
+				tru_tags_redirect($atts['noarticles'], true);
+			} else {
+				txp_die(gTxt('404_not_found'), '404');
+			}
+		} else {
+			return $result;
+		}
 	} else {
 		return tru_tags_cloud($atts);
 	}
@@ -117,19 +116,18 @@ function tru_tags_if_has_tags($atts, $thing) {
 }
 
 
-function tru_tags_if_tag_search($atts, $thing)
-{
+function tru_tags_if_tag_search($atts, $thing) {
 	$tag_parameter = tru_tags_tag_parameter(array(), false);
 	$condition = (!empty($tag_parameter)) ? true : false;
 	return parse(EvalElse($thing, $condition));
 }
 
 
-function tru_tags_tag_parameter($atts, $safehtml = true)
-{
+function tru_tags_tag_parameter($atts, $safehtml = true) {
+	global $tru_tags_prefs;
 	extract(lAtts(array('striphyphens' => 0, 'urlencode' => 0),  $atts, 0));
 
-	$parm = urldecode(strip_tags(gps(TRU_TAGS_TAG_PARAMETER_NAME)));
+	$parm = urldecode(strip_tags(gps($tru_tags_prefs[PARM_NAME]->value)));
 	$parm = ($striphyphens ? str_replace('-', ' ', $parm) : $parm);
 	if ($urlencode) {
 		$parm = urlencode($parm);
@@ -141,8 +139,7 @@ function tru_tags_tag_parameter($atts, $safehtml = true)
 }
 
 
-function tru_tags_search_parameter()
-{
+function tru_tags_search_parameter() {
 	return strip_tags(gps('q'));
 }
 
@@ -157,7 +154,10 @@ function tru_tags_related_tags_from_search($atts) {
 		$rs = tru_tags_redo_article_search($query_atts);
 		if ($rs) {
 			while ($a = nextRow($rs)) {
-				$article_tags = explode(",", trim(tru_tags_strtolower($a[$tags_field])));
+				$article_tags = array();
+				if (array_key_exists($tags_field, $a)) {
+					$article_tags = explode(",", trim(tru_tags_strtolower($a[$tags_field])));
+				}
 				$all_tags = array_merge($all_tags, tru_tags_trim_tags($article_tags));
 			}
 		}
@@ -239,7 +239,10 @@ function tru_tags_cloud_query($atts) {
 	$all_tags = array();
 	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4' and Posted < now()");
 	foreach ($rs as $row) {
-		$temp_array = explode(",", trim(tru_tags_strtolower($row[$tags_field])));
+		$temp_array = array();
+		if (array_key_exists($tags_field, $row)) {
+			$temp_array = explode(",", trim(tru_tags_strtolower($row[$tags_field])));
+		}
 		$all_tags = array_merge($all_tags, tru_tags_trim_tags($temp_array));
 	}
 
@@ -258,6 +261,7 @@ function tru_tags_filter_sections($excludesection) {
 
 
 function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
+	global $tru_tags_prefs;
 	extract($atts);
 
 	$tags_weight = array_count_values($all_tags_for_weight);
@@ -321,12 +325,12 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 			$urlprefix = $linkpath;
 			$urlsuffix = $linkpathtail;
 		} else {
-			if (TRU_TAGS_USE_CLEAN_URLS) {
-				$urlprefix = hu . TRU_TAGS_SECTION . '/';
+			if ($tru_tags_prefs[CLEAN_URLS]->value) {
+				$urlprefix = hu . $tru_tags_prefs[TAG_SECTION]->value . '/';
 			} else {
-				$urlprefix = hu . '?s=' . TRU_TAGS_SECTION . '&amp;t=';
+				$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;t=';
 			}
-			$urlsuffix = (TRU_TAGS_USE_CLEAN_URLS ? '/' : '');
+			$urlsuffix = ($tru_tags_prefs[CLEAN_URLS]->value ? '/' : '');
 		}
 
 		if ($usereltag) {
@@ -350,6 +354,7 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 
 	$tags_html = array();
 	$tag_search_tag = tru_tags_tag_parameter(array('striphyphens' => '1'));
+	$tag_search_tag = function_exists("htmlspecialchars_decode") ? htmlspecialchars_decode($tag_search_tag) : html_entity_decode($tag_search_tag);
 	foreach ($tags_weight as $tag => $weight) {
 		$tag_weight = floor($minpercent + ($weight - $min) * $stepvalue);
 
@@ -399,9 +404,9 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 			$wholeurl = '"' . $urlprefix . urlencode(str_replace(' ', '-', $tag)) . $urlsuffix . '"';
 			$tags_html[] = '<a href=' . $wholeurl . $tag_class . $style . $titlecount . '>' . htmlspecialchars($tag) . '</a>' . $displaycount;
 		} else if ($tag_class || $style || $titlecount) {
-			$tags_html[] = '<span' . $tag_class . $style . $titlecount . '>' . $tag . '</span>' . $displaycount;
+			$tags_html[] = '<span' . $tag_class . $style . $titlecount . '>' . htmlspecialchars($tag) . '</span>' . $displaycount;
 		} else {
-			$tags_html[] = $tag . $displaycount;
+			$tags_html[] = htmlspecialchars($tag) . $displaycount;
 		}
 	}
 	return tru_tags_do_wrap($tags_html, $wraptag, $break, $class, $breakclass);
@@ -411,11 +416,12 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 ### CLEAN URL FUNCTIONS ###
 ###########################
 
-if (TRU_TAGS_USE_CLEAN_URLS) {
+if ($tru_tags_prefs[CLEAN_URLS]->value == 'clean') {
 	register_callback('tru_tags_clean_url_handler', 'pretext');
 }
 
 function tru_tags_clean_url_handler($event, $step) {
+	global $tru_tags_prefs;
 	$subpath = preg_replace("/https?:\/\/.*(\/.*)/Ui","$1",hu);
 	$regsafesubpath = preg_quote($subpath, '/');
 	$req = preg_replace("/^$regsafesubpath/i",'/',$_SERVER['REQUEST_URI']);
@@ -425,16 +431,16 @@ function tru_tags_clean_url_handler($event, $step) {
 	if ($qs) $req = substr($req, 0, $qs);
 
 	$parts = array_values(array_filter(split('/', $req)));
-	if (count($parts) == 2 && $parts[0] == TRU_TAGS_SECTION) {
+	if (count($parts) == 2 && $parts[0] == $tru_tags_prefs[TAG_SECTION]->value) {
 		$tag = $parts[1];
-		$_SERVER['QUERY_STRING'] = TRU_TAGS_TAG_PARAMETER_NAME . '=' . $tag . $qatts;
-		$_SERVER['REQUEST_URI'] = $subpath . TRU_TAGS_SECTION . '/?' . $_SERVER['QUERY_STRING'];
+		$_SERVER['QUERY_STRING'] = $tru_tags_prefs[PARM_NAME]->value . '=' . $tag . $qatts;
+		$_SERVER['REQUEST_URI'] = $subpath . $tru_tags_prefs[TAG_SECTION]->value . '/?' . $_SERVER['QUERY_STRING'];
 		if (count($_POST) > 0) {
-			$_POST['section'] = TRU_TAGS_SECTION;
-			$_POST[TRU_TAGS_TAG_PARAMETER_NAME] = $tag;
+			$_POST['section'] = $tru_tags_prefs[TAG_SECTION]->value;
+			$_POST[$tru_tags_prefs[PARM_NAME]->value] = $tag;
 		} else {
-			$_GET['section'] = TRU_TAGS_SECTION;
-			$_GET[TRU_TAGS_TAG_PARAMETER_NAME] = $tag;
+			$_GET['section'] = $tru_tags_prefs[TAG_SECTION]->value;
+			$_GET[$tru_tags_prefs[PARM_NAME]->value] = $tag;
 		}
 	}
 }
@@ -443,10 +449,280 @@ function tru_tags_clean_url_handler($event, $step) {
 ### ADMIN SIDE FUNCTIONS ###
 ############################
 
-if (TRU_TAGS_SHOW_TAGS_IN_ADMIN)
-	register_callback('tru_tags_admin_handler', 'article');
+if (@txpinterface == 'admin') {
+	add_privs('tru_tags', '1,2');
+	register_tab('extensions', 'tru_tags', 'tru_tags');
+	register_callback('tru_tags_admin_tab', 'tru_tags');
 
-function tru_tags_admin_handler($event, $step) {
+	if ($tru_tags_prefs[TAGS_IN_WRITE_TAB]->value) {
+		register_callback('tru_tags_admin_write_tab_handler', 'article');
+	}
+}
+
+
+function tru_tags_admin_tab($event, $step) {
+	require_privs('tru_tags');
+
+	$results = tru_tags_admin_tab_handle_input();
+
+	$atts = tru_tags_get_standard_cloud_atts(array(), false, false);
+	$all_tags = tru_tags_cloud_query($atts);
+	$cloud = tru_tags_render_cloud($atts, $all_tags, $all_tags);
+
+	$redirects = tru_tags_load_redirects();
+
+	tru_tags_admin_tab_render_page($results, $cloud, $redirects);
+}
+
+
+function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
+	global $event;
+	pagetop('tru_tags', '');
+
+	include(txpath . '/include/txp_prefs.php');
+	global $tru_tags_prefs;
+
+	echo startTable('layout', '', '', '10px').'<tr><td rowspan="4" style="border-right:2px solid gray">'.  # I know, I know...
+		startTable('list', '', '', '', '300px').
+			tr(hCell(gTxt('Current tags'))).
+			tr(td($cloud)).
+		endTable().
+	'</td><td style="border-bottom:2px solid gray;width:400px">';
+
+		if ($results) {
+			echo startTable('list', '', '', '', '100%').
+				tr(hCell(gTxt('Results'))).
+				tr(tda($results), ' style="color:red"').
+			endTable();
+			echo '</td></tr><tr><td style="border-bottom:2px solid gray">';
+		}
+
+
+		echo startTable('list', '', '', '', '100%').
+			tr(tag(gTxt('Article Tag Maintenance').' ('.gTxt('Case Sensitive').'!)', 'th', ' colspan="5"')).
+			tr(
+				form(
+					tda(gTxt('Rename').': ', ' style="vertical-align:middle"').
+					td(text_input('matchtag', '', '15')).
+					tda(gTxt('to').':', ' style="vertical-align:middle"').
+					td(text_input('replacetag', '', '15')).
+					td(fInput('submit', 'replace', gTxt('Run'), 'publish').eInput('tru_tags')),
+					'', ' verify(\'' . gTxt('are_you_sure') . '\')"'
+				)
+			).
+			tr(
+				form(
+					tda(gTxt('Delete').': ', ' style="vertical-align:middle"').
+					td(text_input('deletetag', '', '15')).
+					tdcs('', 2).
+					td(fInput('submit', 'delete', gTxt('Run'), 'publish').eInput('tru_tags')),
+					'', ' verify(\'' . gTxt('are_you_sure') . '\')"'
+				)
+			).
+		endTable();
+
+	echo '</td></tr><tr><td style="border-bottom:2px solid gray">';
+
+		echo startTable('list', '', '', '', '100%').
+			tr(tag(gTxt('Redirections'), 'th', ' colspan="4"'));
+			foreach ($redirects as $lefttag => $righttag) {
+				echo tr(
+					tda(href($lefttag, tru_tags_linkify_tag($lefttag)), ' style="text-align: center"').
+					tda(htmlspecialchars('=>'), ' style="text-align: center"').
+					tda(href($righttag, tru_tags_linkify_tag($righttag)), ' style="text-align: center"').
+					td('<a href="index.php?event=tru_tags&amp;delete_redirect='.urlencode($lefttag).'"  onclick="return verify(\''.gTxt('are_you_sure').'\')">Delete</a>')
+				);
+			}
+			echo tr(
+				'<form name="redirect" id="redirect" method="post" action="index.php?event=tru_tags" onsubmit="return verify(\''.gTxt('are_you_sure').'\')">'.
+					tda(text_input('lefttag', '', '15'), ' style="text-align:center"').
+					tda(htmlspecialchars('=>'), ' style="vertical-align:middle;text-align:center"').
+					tda(text_input('righttag', '', '15'), ' style="text-align:center"').
+					tda('<a href="#" onclick="if (verify(\''.gTxt('are_you_sure').'\')) document.getElementById(\'redirect\').submit(); return false;">Add new</a>', ' style="vertical-align:middle"').
+					fInput('hidden', 'redirect', '1').
+				'</form>'
+
+			).
+		endTable();
+
+	echo '</td></tr><tr><td>';
+
+		echo startTable('list').
+			tr(tag(gTxt('Preferences'), 'th', ' colspan="2"')).
+			form(
+				tr(
+					tda(gTxt('Use clean URLs').': ', ' style="vertical-align:middle"').
+					td(radio_list(CLEAN_URLS,
+							array('clean'=>gTxt('clean'), 'messy'=>gTxt('messy')),
+							$tru_tags_prefs[CLEAN_URLS]->value))
+				).
+				tr(
+					tda(gTxt('Tag section name').' (default is "'.$tru_tags_prefs[TAG_SECTION]->default_value.'"): ', ' style="vertical-align:middle"').
+					td(text_input(TAG_SECTION, $tru_tags_prefs[TAG_SECTION]->value, '15'))
+				).
+				tr(
+					tda(gTxt('URL parameter for tag search').' (default is "'.$tru_tags_prefs[PARM_NAME]->default_value.'"): ', ' style="vertical-align:middle"').
+					td(text_input(PARM_NAME, $tru_tags_prefs[PARM_NAME]->value, '15'))
+				).
+				tr(
+					tda(gTxt('Put tags into RSS/Atom feeds, in "Category" elements').
+						': <br>(you probably want this)', ' style="vertical-align:middle"').
+					td(yesnoRadio(TAGS_IN_FEED_CATEGORIES, $tru_tags_prefs[TAGS_IN_FEED_CATEGORIES]->value))
+				).
+				tr(
+					tda('Append the tag list to the body of RSS/Atom feeds, '.
+						'with links, and with rel="tag":<br>If this is turned on,'.
+						'you can define a "misc" form named tru_tags_feed_tags '.
+						'that will be used to render the tags in the feed.',
+						' style="vertical-align:middle"').
+					td(yesnoRadio(TAGS_IN_FEED_BODY, $tru_tags_prefs[TAGS_IN_FEED_BODY]->value))
+				).
+				tr(
+					tda(gTxt('Show a clickable list of tags on the "Write" page').': ',
+						' style="vertical-align:middle"').
+					td(yesnoRadio(TAGS_IN_WRITE_TAB, $tru_tags_prefs[TAGS_IN_WRITE_TAB]->value))
+				).
+				tr(
+					td('').
+					tda(fInput('submit', 'prefs', gTxt('Save'), 'publish').eInput('tru_tags'), ' style="text-align:right"')
+				),
+				'', ' verify(\'' . gTxt('are_you_sure') . '\')"'
+			).
+		endTable();
+
+	echo '</td></tr>'.endTable();
+}
+
+
+function tru_tags_admin_tab_handle_input() {
+	if (gps('prefs')) {
+		return tru_tags_admin_update_prefs();
+	} else if (gps('delete')) {
+		return tru_tags_admin_delete_tag(gps('deletetag'));
+	} else if (gps('replace')) {
+		$result = tru_tags_admin_replace_tag(gps('matchtag'), gps('replacetag'), false);
+		return $result . '<br>' . tru_tags_admin_redirect_tag(gps('matchtag'), gps('replacetag'));
+	} else if (gps('redirect')) {
+		return tru_tags_admin_redirect_tag(gps('lefttag'), gps('righttag'));
+	} else if (gps('delete_redirect')) {
+		return tru_tags_admin_delete_redirect(gps('delete_redirect'));
+	} else {
+		return '';
+	}
+}
+
+
+function tru_tags_admin_update_prefs() {
+	global $tru_tags_prefs;
+	$results = array();
+	foreach ($tru_tags_prefs as $pref) {
+		$valid_value = $pref->validate_value(gps($pref->name));
+		if ($valid_value && $valid_value <> gps($pref->name)) {
+			return $valid_value;  ### this is a sneaky way to handle validation - sorry ;)
+		}
+		if ($valid_value <> $pref->value) {
+			if ($valid_value == $pref->default_value) {
+				$result = tru_tags_delete_pref($pref->name);
+			} else {
+				$result = tru_tags_upsert_pref($pref->name, $valid_value);
+			}
+			if ($result) {
+				$results[] = 'Updated ' . $pref->name;
+				$pref->value = $valid_value;
+			} else {
+				$results[] = 'Error updating ' . $pref->name;
+			}
+		}
+	}
+	if (count($results) == 0) {
+		return 'No records need updating';
+	} else {
+		return join('<br>', $results);
+	}
+}
+
+
+function tru_tags_upsert_pref($name, $value) {
+	if (!safe_query('create table if not exists ' . safe_pfx('tru_tags_prefs').
+		' (name varchar(255) primary key, '.
+		'value varchar(255) not null)')) {
+		return 'Serious error - unable to create the ' . safe_pfx('tru_tags_prefs') . ' table.';
+	}
+
+	return safe_upsert('tru_tags_prefs', 'value="'.$value.'"', 'name="'.$name.'"');
+}
+
+
+function tru_tags_delete_pref($name) {
+	if (safe_delete('tru_tags_prefs', 'name="'.$name.'"')) {
+		if (safe_count('tru_tags_prefs', '1') == 0 && !safe_query('drop table ' . safe_pfx('tru_tags_prefs'))) {
+			return false;
+		}
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+function tru_tags_admin_delete_tag($deletetag) {
+	if (trim($deletetag)) {
+		return tru_tags_admin_replace_tag($deletetag, '', true);
+	} else {
+		return 'Please enter a value';
+	}
+}
+
+
+function tru_tags_admin_replace_tag($matchtag, $replacetag, $allow_blank_replacetag) {
+	$matchtag = trim($matchtag);
+	$replacetag = trim($replacetag);
+	if ($matchtag && ($allow_blank_replacetag || $replacetag)) {
+		if (safe_update('textpattern', TRU_TAGS_FIELD.'=trim(both \',\' from replace(concat(",", '.TRU_TAGS_FIELD.', ","), concat(",", \''.addslashes($matchtag).'\', ","), \','.addslashes($replacetag).',\'))', '1')) {
+			return 'Updated '.mysql_affected_rows().' rows ("'.htmlspecialchars($matchtag).'"=>"'.htmlspecialchars($replacetag).'")';
+		} else {
+			return 'Error: ' . mysql_error();
+		}
+	} else {
+		return 'Please enter a value in both fields';
+	}
+}
+
+
+function tru_tags_admin_redirect_tag($lefttag, $righttag) {
+	$lefttag = addslashes(tru_tags_strtolower(trim($lefttag)));
+	$righttag = addslashes(tru_tags_strtolower(trim($righttag)));
+	if (!$lefttag || !$righttag) {
+		return 'Please enter a value in both fields';
+	}
+
+	if (!safe_query('create table if not exists ' . safe_pfx('tru_tags_redirects').
+		' (lefttag varchar(255) primary key, '.
+		'righttag varchar(255) not null)')) {
+		return 'Serious error - unable to create the ' . safe_pfx('tru_tags_redirects') . ' table.';
+	}
+
+	if (safe_insert('tru_tags_redirects', 'lefttag="'.$lefttag.'",righttag="'.$righttag.'"')) {
+		return 'Redirect added ("'.htmlspecialchars($lefttag).'"=>"'.htmlspecialchars($righttag).'") - please test it!';
+	} else {
+		return 'Error adding record - does it already exist?';
+	}
+}
+
+
+function tru_tags_admin_delete_redirect($lefttag) {
+	if (safe_delete('tru_tags_redirects', 'lefttag="'.addslashes($lefttag).'"')) {
+		if (safe_count('tru_tags_redirects', '1') == 0 && !safe_query('drop table ' . safe_pfx('tru_tags_redirects'))) {
+			return 'Redirect deleted, but unable to drop table ' . safe_pfx('tru_tags_redirects');
+		}
+		return 'Redirect deleted ("'.htmlspecialchars($lefttag).'")';
+	} else {
+		return 'Error deleting redirect';
+	}
+}
+
+
+function tru_tags_admin_write_tab_handler($event, $step) {
 	$cloud = array_unique(tru_tags_cloud_query(tru_tags_get_standard_cloud_atts(array(), true, true)));
 	sort($cloud);
 
@@ -462,31 +738,31 @@ function tru_tags_admin_handler($event, $step) {
 	$to_insert = "<style>a.tag_chosen{background-color: #FEB; color: black;}</style>" . $to_insert;
 
 	$js = <<<EOF
-var keywordsField = document.getElementById('keywords');
-var parent = keywordsField.parentNode;
-parent.appendChild(document.createElement('br'));
-var cloud = document.createElement('span');
-cloud.setAttribute('class', 'tru_tags_admin_tags');
-cloud.innerHTML = '{$to_insert}';
-parent.appendChild(cloud);
+		var keywordsField = document.getElementById('keywords');
+		var parent = keywordsField.parentNode;
+		parent.appendChild(document.createElement('br'));
+		var cloud = document.createElement('span');
+		cloud.setAttribute('class', 'tru_tags_admin_tags');
+		cloud.innerHTML = '{$to_insert}';
+		parent.appendChild(cloud);
 
-function toggleTag(tagName) {
-	var regexTag = tagName.replace(/([\\\\\^\\$*+[\\]?{}.=!:(|)])/g,"\\\\$1");
-	var tagRegex = new RegExp("((^|,)\\\s*)" + regexTag + "\\\s*(,\\\s*|$)");
-	var textarea = document.getElementById('keywords');
-	var curval = textarea.value.replace(/,?\s+$/, '');
-	if ('' == curval) {
-		textarea.value = tagName;
-	} else if (curval.match(tagRegex)) {
-		textarea.value = curval.replace(tagRegex, '$1').replace(/,?\s+$/, '');
-		return '';
-	} else if (',' == curval.charAt(curval.length - 1)) {
-		textarea.value += ' ' + tagName;
-	} else {
-		textarea.value += ', ' + tagName;
-	}
-	return 'tag_chosen';
-}
+		function toggleTag(tagName) {
+			var regexTag = tagName.replace(/([\\\\\^\\$*+[\\]?{}.=!:(|)])/g,"\\\\$1");
+			var tagRegex = new RegExp("((^|,)\\\s*)" + regexTag + "\\\s*(,\\\s*|$)");
+			var textarea = document.getElementById('keywords');
+			var curval = textarea.value.replace(/,?\s+$/, '');
+			if ('' == curval) {
+				textarea.value = tagName;
+			} else if (curval.match(tagRegex)) {
+				textarea.value = curval.replace(tagRegex, '$1').replace(/,?\s+$/, '');
+				return '';
+			} else if (',' == curval.charAt(curval.length - 1)) {
+				textarea.value += ' ' + tagName;
+			} else {
+				textarea.value += ', ' + tagName;
+			}
+			return 'tag_chosen';
+		}
 EOF;
 
 	echo script_js($js);
@@ -502,12 +778,12 @@ register_callback('tru_tags_rss_handler', 'rss_entry');
 function tru_tags_rss_handler($event, $step) { return tru_tags_feed_handler(false); }
 
 function tru_tags_feed_handler($atom) {
-	global $thisarticle;
+	global $thisarticle, $tru_tags_prefs;
 	extract($thisarticle);
 
 	$tags = tru_tags_get_tags_for_article($thisid);
 
-	if (TRU_TAGS_ADD_TAGS_TO_FEED_BODY) {
+	if ($tru_tags_prefs[TAGS_IN_FEED_BODY]->value) {
 		$extrabody = '';
 		$FORM_NAME = 'tru_tags_feed_tags';
 		if (fetch('form', 'txp_form', 'name', $FORM_NAME)) {
@@ -524,7 +800,7 @@ function tru_tags_feed_handler($atom) {
 		$thisarticle['body'] = trim($thisarticle['body']).n.$extrabody.n;
 	}
 
-	if (TRU_TAGS_ADD_TAGS_TO_FEED_XML) {
+	if ($tru_tags_prefs[TAGS_IN_FEED_CATEGORIES]->value) {
 		$output = array();
 		foreach ($tags as $tag) {
 			if ($atom) {
@@ -538,13 +814,112 @@ function tru_tags_feed_handler($atom) {
 }
 
 
+### PREFS FUNCTIONS / CLASSES ###
+#################################
+
+class tru_tags_pref {
+	function tru_tags_pref($name, $default_value, $type) {
+		$this->name = $name;
+		$this->value = $default_value;
+		$this->default_value = $default_value;
+		$this->type = $type;
+	}
+
+	function validate_value($value) {
+		if ($value) {
+			return $value;
+		} else if ($this->type == 'boolean') {
+			return '0';
+		} else {
+			return 'Please enter a value for ' . $this->name;
+		}
+	}
+}
+
+function tru_tags_load_prefs() {
+	$prefs = array();
+
+	global $permlink_mode;
+	$prefs[CLEAN_URLS] = new tru_tags_pref(CLEAN_URLS, ($permlink_mode != 'messy' ? 'clean' : 'messy'), 'string');
+	$prefs[TAG_SECTION] = new tru_tags_pref(TAG_SECTION, 'tag', 'string');
+	$prefs[PARM_NAME] = new tru_tags_pref(PARM_NAME, 't', 'string');
+	$prefs[TAGS_IN_FEED_CATEGORIES] = new tru_tags_pref(TAGS_IN_FEED_CATEGORIES, '1', 'boolean');
+	$prefs[TAGS_IN_FEED_BODY] = new tru_tags_pref(TAGS_IN_FEED_BODY, '0', 'boolean');
+	$prefs[TAGS_IN_WRITE_TAB] = new tru_tags_pref(TAGS_IN_WRITE_TAB, '1', 'boolean');
+
+	if (mysql_query("describe " . PFX . "tru_tags_prefs")) {
+		$rs = safe_rows('*', 'tru_tags_prefs', '1');
+		foreach ($rs as $row) {
+			$prefs[$row['name']]->value = $row['value'];
+		}
+	}
+
+	return $prefs;
+}
+
+
 ### OTHER SUPPORT FUNCTIONS ###
 ###############################
+
+function tru_tags_redirect_if_needed($tag_parameter) {
+	$redirects = tru_tags_load_redirects();
+	foreach ($redirects as $lefttag => $righttag) {
+		if ($lefttag == $tag_parameter || $lefttag == str_replace('-', ' ', $tag_parameter)) {
+			tru_tags_redirect($righttag, false);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+function tru_tags_load_redirects() {
+	$redirects = array();
+	if (mysql_query("describe " . PFX . "tru_tags_redirects")) {
+		$rs = safe_rows('*', 'tru_tags_redirects', '1 order by lefttag');
+		foreach ($rs as $row) {
+			$redirects[$row['lefttag']] = $row['righttag'];
+		}
+	}
+	return $redirects;
+}
+
+
+function tru_tags_redirect($destination, $is_full_url) {
+	global $tru_tags_prefs;
+	if ($is_full_url) {
+		$url = $destination;
+		$message = 'The resource you requested has moved to ' . $destination;
+	} else {
+		$url = tru_tags_linkify_tag($destination);
+		$message = 'The requested tag has been replaced by ' . $destination;
+	}
+
+	header('Location: ' . $url);
+	txp_die($message, '301');
+}
+
+
+function tru_tags_linkify_tag($tag) {
+	global $tru_tags_prefs;
+	if ($tru_tags_prefs[CLEAN_URLS]->value) {
+		$urlprefix = hu . $tru_tags_prefs[TAG_SECTION]->value . '/';
+	} else {
+		$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;t=';
+	}
+	$urlsuffix = ($tru_tags_prefs[CLEAN_URLS]->value ? '/' : '');
+	return $urlprefix . urlencode(str_replace(' ', '-', $tag)) . $urlsuffix;
+}
+
 
 function tru_tags_get_tags_for_article($articleID) {
 	$tags_field = TRU_TAGS_FIELD;
 	$rs = safe_row($tags_field, "textpattern", "ID='$articleID' AND $tags_field <> ''");
-	$all_tags = explode(",", trim(tru_tags_strtolower($rs[$tags_field])));
+	$all_tags = array();
+	if (array_key_exists($tags_field, $rs)) {
+		$all_tags = explode(",", trim(tru_tags_strtolower($rs[$tags_field])));
+	}
 
 	return tru_tags_trim_tags($all_tags);
 }
@@ -572,7 +947,7 @@ function tru_tags_trim_tags($tag_array) {
 
 
 function tru_tags_fixup_query_atts($atts, $tag_parameter) {
-	$keywords = explode(',', quotemeta($tag_parameter));
+	$keywords = explode(',', $tag_parameter);
 	foreach ($keywords as $keyword) {
 		if (strpos($keyword, '-') !== false) {
 			$keywords[] = str_replace('-', ' ', $keyword);
@@ -580,17 +955,25 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 	}
 	$atts['keywords'] = implode(',', $keywords);
 
-	if (isset($atts['section']) && strpos($atts['section'], ',') !== false)
+	if (isset($atts['section']) && strpos($atts['section'], ',') !== false) {
 		$atts['section'] = '';
+	}
 
 	if (isset($atts['excludesection'])) {
 		unset($atts['excludesection']);
 	}
 
-	if (!isset($atts['limit']))
-		$atts['limit'] = '1000';
+	if (isset($atts['noarticles'])) {
+		unset($atts['noarticles']);
+	}
 
-	$atts['allowoverride'] = true;
+	if (!isset($atts['limit'])) {
+		$atts['limit'] = '1000';
+	}
+
+	if (!isset($atts['allowoverride'])) {
+		$atts['allowoverride'] = true;
+	}
 
 	return $atts;
 }
@@ -598,7 +981,6 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 
 function tru_tags_strtolower($str) {
 	if (function_exists("mb_strtolower")) {
-	//if (version_compare(phpversion(), "4.3.0", ">=")) {
 		return mb_strtolower($str, "UTF-8");
 	} else {
 		return strtolower($str);
@@ -703,9 +1085,9 @@ function tru_tags_redo_article_search($atts) {
 
 	//Allow keywords for no-custom articles. That tagging mode, you know
 	if ($keywords) {
-		$keys = split(',',$keywords);
+		$keys = doSlash(array_map('trim', split(',', $keywords)));
 		foreach ($keys as $key) {
-			$keyparts[] = " Keywords like '%".doSlash(trim($key))."%'";
+			$keyparts[] = "FIND_IN_SET('".$key."',Keywords)";
 		}
 		$keywords = " and (" . join(' or ',$keyparts) . ")";
 	}
