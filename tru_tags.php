@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '2.0';
+$plugin['version'] = '2.1';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.truist.com/';
 $plugin['description'] = 'Tagging support for Textpattern';
@@ -35,8 +35,10 @@ I've taken the detailed help out of the plugin; my apologies.  It was too big an
 
 #See http://www.truist.com/reference/497/trutags-usage-instructions for instructions
 
-# Switch this to '1' to get clean url support
-define('TRU_TAGS_USE_CLEAN_URLS', 0);
+# Switch this to '1' to get clean url support or '0' to turn it off.
+# It will probably figure it out, though, so you shouldn't have to change it.
+global $permlink_mode;
+define('TRU_TAGS_USE_CLEAN_URLS', $permlink_mode != 'messy');
 
 # This tells tru_tags which section to use for tags.
 define('TRU_TAGS_SECTION', 'tag');
@@ -202,7 +204,12 @@ function tru_tags_get_standard_cloud_atts($atts, $isList, $isArticle) {
 			'title'		=> '',
 			'listlimit'	=> '',
 			'keep'		=> 'largest',
-			'cutoff'	=> 'chunk'
+			'cutoff'	=> 'chunk',
+			'texttransform'	=> 'none',
+			'linkpath'	=> '',
+			'linkpathtail'	=> '',
+			'filtersearch'	=> '1',
+			'excludesection'=> ''
 		),$atts, 0);
 }
 
@@ -221,7 +228,10 @@ function tru_tags_cloud_query($atts) {
 
 	$tags_field = TRU_TAGS_FIELD;
 	include_once txpath.'/publish/search.php';
-	$filter = filterSearch();
+
+	$filter = tru_tags_filter_sections($excludesection);
+	$filter .= ($filtersearch ? filterSearch() : '');
+
 	$all_tags = array();
 	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4' and Posted < now()");
 	foreach ($rs as $row) {
@@ -230,6 +240,16 @@ function tru_tags_cloud_query($atts) {
 	}
 
 	return $all_tags;
+}
+
+
+function tru_tags_filter_sections($excludesection) {
+	$sections = explode(',', $excludesection);
+	$filters = array();
+	foreach ($sections as $section) {
+		$filters[] = "and Section != '".doSlash($section)."'";
+	}
+	return join(' ', $filters);
 }
 
 
@@ -293,27 +313,35 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 	}
 
 	if ($generatelinks) {
-		if (TRU_TAGS_USE_CLEAN_URLS) {
-			$urlprefix = hu . TRU_TAGS_SECTION . '/';
-			if ($usereltag) {
-				if ($usenofollow) {
-					$urlsuffix = '/" rel="tag nofollow';
-				} else {
-					$urlsuffix = '/" rel="tag';
-				}
-			} else if ($usenofollow) {
-				$urlsuffix = '/" rel="nofollow';
-			} else {
-				$urlsuffix = '/';
-			}
+		if ($linkpath) {
+			$urlprefix = $linkpath;
+			$urlsuffix = $linkpathtail;
 		} else {
-			$urlprefix = hu . '?s=' . TRU_TAGS_SECTION . '&amp;t=';
-			$urlsuffix = '/" rel="nofollow';
+			if (TRU_TAGS_USE_CLEAN_URLS) {
+				$urlprefix = hu . TRU_TAGS_SECTION . '/';
+			} else {
+				$urlprefix = hu . '?s=' . TRU_TAGS_SECTION . '&amp;t=';
+			}
+			$urlsuffix = (TRU_TAGS_USE_CLEAN_URLS ? '/' : '');
+		}
+
+		if ($usereltag) {
+			if ($usenofollow) {
+				$urlsuffix .= '" rel="tag nofollow';
+			} else {
+				$urlsuffix .= '" rel="tag';
+			}
+		} else if ($usenofollow) {
+			$urlsuffix .= '" rel="nofollow';
 		}
 	}
 
-	$max = max($tags_weight);
-	$min = min($tags_weight);
+	if (count($tags_weight) > 0) {
+		$max = max($tags_weight);
+		$min = min($tags_weight);
+	} else {
+		$max = $min = 0;
+	}
 	$stepvalue = ($max == $min) ? 0 : ($maxpercent - $minpercent) / ($max - $min);
 
 	foreach ($tags_weight as $tag => $weight) {
@@ -347,10 +375,20 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 		if ($showcounts && $showcounts != 'title')
 			$displaycount = ' ' . $count;
 
+		if ($texttransform == 'capitalize') {
+			$tag = ucwords($tag);
+		} else if ($texttransform == 'uppercase') {
+			$tag = strtoupper($tag);
+		} else if ($texttransform == 'lowercase') {
+			$tag = strtolower($tag);
+		} else if ($texttransform == 'capfirst') {
+			$tag = ucfirst($tag);
+		}
+
 		if ($generatelinks) {
 			$wholeurl = '"' . $urlprefix . urlencode(str_replace(' ', '-', $tag)) . $urlsuffix . '"';
 			$tags_html[] = '<a href=' . $wholeurl . $tag_class . $style . $titlecount . '>' . htmlspecialchars($tag) . '</a>' . $displaycount;
-		} else if ($tag_class || $style || titlecount) {
+		} else if ($tag_class || $style || $titlecount) {
 			$tags_html[] = '<span' . $tag_class . $style . $titlecount . '>' . $tag . '</span>' . $displaycount;
 		} else {
 			$tags_html[] = $tag . $displaycount;
@@ -379,10 +417,13 @@ function tru_tags_clean_url_handler($event, $step) {
 	if (count($parts) == 2 && $parts[0] == TRU_TAGS_SECTION) {
 		$tag = $parts[1];
 		$_SERVER['QUERY_STRING'] = TRU_TAGS_TAG_PARAMETER_NAME . '=' . $tag . $qatts;
-		$_SERVER['REQUEST_URI'] = '/' . TRU_TAGS_SECTION . '/?' . $_SERVER['QUERY_STRING'];
+		//$_SERVER['REQUEST_URI'] = $subpath . TRU_TAGS_SECTION . '/?' . $_SERVER['QUERY_STRING'];
+		$_SERVER['REQUEST_URI'] = $subpath . TRU_TAGS_SECTION . '/?' . $_SERVER['QUERY_STRING'];
 		if (count($_POST) > 0) {
+			$_POST['section'] = TRU_TAGS_SECTION;
 			$_POST[TRU_TAGS_TAG_PARAMETER_NAME] = $tag;
 		} else {
+			$_GET['section'] = TRU_TAGS_SECTION;
 			$_GET[TRU_TAGS_TAG_PARAMETER_NAME] = $tag;
 		}
 	}
@@ -516,16 +557,16 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 	}
 	$atts['keywords'] = implode(',', $keywords);
 
-	if ($atts['section'] && strpos($atts['section'], ',') !== false)
+	if (isset($atts['section']) && strpos($atts['section'], ',') !== false)
 		$atts['section'] = '';
 
-	if (is_callable("array_key_exists")) {
-		if (!array_key_exists('limit', $atts))
-			$atts['limit'] = '1000';
-	} else {
-		if (!$atts['limit'])
-			$atts['limit'] = '1000';
+	if (isset($atts['excludesection'])) {
+		unset($atts['excludesection']);
 	}
+
+	if (!isset($atts['limit']))
+		$atts['limit'] = '1000';
+
 	$atts['allowoverride'] = true;
 
 	return $atts;
@@ -533,7 +574,7 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 
 
 function tru_tags_strtolower($str) {
-	if (is_callable("mb_strtolower")) {
+	if (function_exists("mb_strtolower")) {
 	//if (version_compare(phpversion(), "4.3.0", ">=")) {
 		return mb_strtolower($str, "UTF-8");
 	} else {
