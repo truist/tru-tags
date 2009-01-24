@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '3.1';
+$plugin['version'] = '3.2';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.truist.com/';
 $plugin['description'] = 'Article tagging';
@@ -17,7 +17,7 @@ if (!defined('txpinterface'))
 if(0){
 ?>
 # --- BEGIN PLUGIN HELP ---
-To learn more about tru_tags, check out the "introductory article":/blog/493/trutags-a-tagging-plugin-for-textpattern, "releases page":http://www.truist.com/reference/537/tru_tags-releases, "feature list":http://www.truist.com/reference/495/trutags-feature-list, and "usage instructions":http://www.truist.com/reference/497/trutags-usage-instructions.
+To learn more about tru_tags, check out the "introductory article":/blog/493/trutags-a-tagging-plugin-for-textpattern, "releases page":http://www.truist.com/reference/537/tru_tags-releases, "feature list":http://www.truist.com/reference/495/trutags-feature-list, "roadmap":http://www.truist.com/reference/554/tru_tags-roadmap, and "usage instructions":http://www.truist.com/reference/497/trutags-usage-instructions.
 
 I've taken the detailed help out of the plugin; my apologies.  It was too big and too difficult to keep maintaining on my site and in the plugin.
 # --- END PLUGIN HELP ---
@@ -25,7 +25,7 @@ I've taken the detailed help out of the plugin; my apologies.  It was too big an
 }
 # --- BEGIN PLUGIN CODE ---
 
-#Copyright 2007 Nathan Arthur
+#Copyright 2008 Nathan Arthur
 #Released under the GNU Public License, see http://www.opensource.org/licenses/gpl-license.php for details
 #This work is inspired by ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern
 
@@ -76,6 +76,30 @@ function tru_tags_handler($atts) {
 }
 
 
+function tru_tags_archive($atts) {
+	global $tru_tags_current_archive_tag;
+	$tags = array_unique(tru_tags_cloud_query(tru_tags_get_standard_cloud_atts($atts, false, false)));
+	sort($tags);
+	foreach ($tags as $tag) {
+		$tru_tags_current_archive_tag = $tag;
+		$clean_atts = tru_tags_fixup_query_atts($atts, $tag);
+		$results[] = doArticles($clean_atts, true);		#function in TXP code
+	}
+	return join(' ', $results);
+}
+
+
+function tru_tags_current_archive_tag($atts) {
+	global $tru_tags_current_archive_tag;
+	extract(lAtts(array('link' => '0'),  $atts, 0));
+	if ($link) {
+		return '<a href="' . tru_tags_linkify_tag($tru_tags_current_archive_tag) . '">' . $tru_tags_current_archive_tag . '</a>';
+	} else {
+		return $tru_tags_current_archive_tag;
+	}
+}
+
+
 function tru_tags_cloud($atts) {
 	return tru_tags_list(tru_tags_get_standard_cloud_atts($atts, false, false));
 }
@@ -117,18 +141,34 @@ function tru_tags_if_has_tags($atts, $thing) {
 
 
 function tru_tags_if_tag_search($atts, $thing) {
-	$tag_parameter = tru_tags_tag_parameter(array(), false);
+	extract(lAtts(array('tag' => ''),  $atts, 0));
+
+	$tag_parameter = tru_tags_tag_parameter(array('striphyphens' => 1), false);
 	$condition = (!empty($tag_parameter)) ? true : false;
+	if ($condition && !empty($tag)) {
+		$condition = ($tag_parameter == $tag);
+	}
 	return parse(EvalElse($thing, $condition));
 }
 
 
 function tru_tags_tag_parameter($atts, $safehtml = true) {
 	global $tru_tags_prefs;
-	extract(lAtts(array('striphyphens' => 0, 'urlencode' => 0),  $atts, 0));
+	extract(lAtts(array('striphyphens' => '0', 'urlencode' => 0),  $atts, 0));
 
 	$parm = urldecode(strip_tags(gps($tru_tags_prefs[PARM_NAME]->value)));
-	$parm = ($striphyphens ? str_replace('-', ' ', $parm) : $parm);
+	if ('lookup' == $striphyphens) {
+		$atts = tru_tags_get_standard_cloud_atts(array(), false, false);
+		$tag_list = array_unique(tru_tags_cloud_query($atts));
+		foreach ($tag_list as $cloud_tag) {
+			if ($parm == str_replace(' ', '-', $cloud_tag)) {
+				$parm = $cloud_tag;
+				break;
+			}
+		}
+	} else if ($striphyphens) {
+		$parm = str_replace('-', ' ', $parm);
+	}
 	if ($urlencode) {
 		$parm = urlencode($parm);
 	 } else if ($safehtml) {
@@ -140,6 +180,7 @@ function tru_tags_tag_parameter($atts, $safehtml = true) {
 
 
 function tru_tags_search_parameter() {
+	trigger_error(gTxt('deprecated_tag'), E_USER_NOTICE);
 	return strip_tags(gps('q'));
 }
 
@@ -147,7 +188,7 @@ function tru_tags_search_parameter() {
 function tru_tags_related_tags_from_search($atts) {
 	$tag_parameter = tru_tags_tag_parameter(array(), false);
 	if (!empty($tag_parameter)) {
-	        $tags_field = TRU_TAGS_FIELD;
+        $tags_field = TRU_TAGS_FIELD;
 		$all_tags = array();
 
 		$query_atts = tru_tags_fixup_query_atts($atts, $tag_parameter);
@@ -489,12 +530,28 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 	include(txpath . '/include/txp_prefs.php');
 	global $tru_tags_prefs;
 
-	echo startTable('layout', '', '', '10px').'<tr><td rowspan="4" style="border-right:2px solid gray">'.  # I know, I know...
-		startTable('list', '', '', '', '300px').
-			tr(hCell(gTxt('Current tags'))).
-			tr(td($cloud)).
-		endTable().
-	'</td><td style="border-bottom:2px solid gray;width:400px">';
+	echo startTable('layout', '', '', '10px').'<tr><td style="border-right:2px solid gray">'.  # I know, I know...
+		startTable('layout', '', '', '', '10px').'<tr><td style="border-bottom:2px solid gray">'.
+			startTable('list', '', '', '', '300px').
+				tr(hCell(gTxt('Current tags'))).
+				tr(td($cloud)).
+			endTable().
+		'</td></tr><tr><td>'.
+			startTable('list', '', '', '', '300px').
+				tr(hCell(gTxt('tru_tags Reference'))).
+				tr(td('<a href="http://www.truist.com/reference/497/trutags-usage-instructions">Usage instructions</a>'.
+				'<br><a href="http://forum.textpattern.com/viewtopic.php?id=15084">Forum pages</a>'.
+				'<br><a href="http://www.truist.com/reference/537/tru_tags-releases">Releases page</a>'.
+				'<br><a href="http://www.truist.com/reference/554/tru_tags-roadmap">Release roadmap</a>'.
+				'<br><a href="http://www.truist.com/reference/495/trutags-feature-list">Feature list</a>'.
+				'<br><br><a href="http://www.truist.com/blog/493/trutags-a-tagging-plugin-for-textpattern">tru_tags</a>, by <a href="http://www.truist.com/">Nathan Arthur</a>'.
+				'<br><br>'.
+				'<div id="paypal"><form action="https://www.paypal.com/cgi-bin/webscr" method="post"><input type="hidden" name="cmd" value="_s-xclick" /><input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" name="submit" alt="Make a donation to Nathan Arthur" /><img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" /><input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----" /></form></div>'
+				)).
+			endTable().
+		'</td></tr>'.endTable().
+	'</td><td>'.
+		startTable('layout', '', '', '10px').'<tr><td style="border-bottom:2px solid gray;width:400px">';
 
 		if ($results) {
 			echo startTable('list', '', '', '', '100%').
@@ -558,7 +615,7 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 			tr(tag(gTxt('Preferences'), 'th', ' colspan="2"')).
 			form(
 				tr(
-					tda(gTxt('Use clean URLs').' ('.gTxt('default is').' '.$tru_tags_prefs[CLEAN_URLS]->default_value.'): ', ' style="vertical-align:middle"').
+					tda(gTxt('Use clean URLs').' ('.gTxt('site default is').' '.$tru_tags_prefs[CLEAN_URLS]->default_value.'): ', ' style="vertical-align:middle"').
 					td(radio_list(CLEAN_URLS,
 							array('clean'=>gTxt('clean'), 'messy'=>gTxt('messy')),
 							$tru_tags_prefs[CLEAN_URLS]->value))
@@ -596,6 +653,7 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 				),
 				'', ' verify(\'' . gTxt('are_you_sure') . '\')"'
 			).
+		endTable().'</td></tr>'.
 		endTable();
 
 	echo '</td></tr>'.endTable();
@@ -900,7 +958,7 @@ function tru_tags_redirect($destination, $is_full_url) {
 		$url = $destination;
 		$message = 'The resource you requested has moved to ' . $destination;
 	} else {
-		$url = tru_tags_linkify_tag($destination);
+		$url = tru_tags_linkify_tag($destination, false);
 		$message = 'The requested tag has been replaced by ' . $destination;
 	}
 
@@ -909,12 +967,12 @@ function tru_tags_redirect($destination, $is_full_url) {
 }
 
 
-function tru_tags_linkify_tag($tag) {
+function tru_tags_linkify_tag($tag, $use_amp = true) {
 	global $tru_tags_prefs;
 	if (tru_tags_clean_urls()) {
 		$urlprefix = hu . $tru_tags_prefs[TAG_SECTION]->value . '/';
 	} else {
-		$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;' . $tru_tags_prefs[PARM_NAME]->value . '=';
+		$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . ($use_amp ? '&amp;' : '&') . $tru_tags_prefs[PARM_NAME]->value . '=';
 	}
 	$urlsuffix = (tru_tags_clean_urls() ? '/' : '');
 	return $urlprefix . urlencode(str_replace(' ', '-', $tag)) . $urlsuffix;
@@ -981,6 +1039,10 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 
 	if (!isset($atts['allowoverride'])) {
 		$atts['allowoverride'] = true;
+	}
+
+	if (isset($atts['searchform']) && !isset($atts['listform'])) {
+		$atts['listform'] = $atts['searchform'];
 	}
 
 	return $atts;
