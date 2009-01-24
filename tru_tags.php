@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '0.9';
+$plugin['version'] = '1.0';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://truist.com/';
 $plugin['description'] = 'Tagging support with full integration';
@@ -19,13 +19,16 @@ if(0){
 # --- BEGIN PLUGIN HELP ---
 
 	<p>To learn more about tru_tags, check out the <a href="http://www.truist.com/blog/493/trutags-a-tagging-plugin-for-textpattern">introductory article</a>.</p>
+	<p>Copyright 2006 Nathan Arthur</p>
+	<p>Released under the GNU Public License, see http://www.opensource.org/licenses/gpl-license.php for details</p>
+	<p>This work is based on ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern</p>
 	<h3>Configuration</h3>
 	<p>This section details what do to after you&#8217;ve installed the plugin.  Please <a href="/stash/tru_tags-0.9.txt">click here to see the install instructions</a> if you haven&#8217;t done that yet.</p>
 	<h4>Step 1: Create a new section</h4>
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag<sup><a href="#fn124658340440a99016bbbc">1</a></sup>,&#8221; by default.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn1555334271440a9901709f7">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag<sup><a href="#fn1447322175440d06ea40610">1</a></sup>,&#8221; by default.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn1150913146440d06ea45490">2</a></sup>:</p>
 	<p><img src="http://www.truist.com/images/2.png" height="280" width="398" alt="tag section configuration" class="diagram" /></p>
-	<p class="footnote" id="fn124658340440a99016bbbc"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
-	<p class="footnote" id="fn1555334271440a9901709f7"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
+	<p class="footnote" id="fn1447322175440d06ea40610"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
+	<p class="footnote" id="fn1150913146440d06ea45490"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
 	<h4>Step 2: Call the plugin from that section</h4>
 	<p>To make tag searching and the default tag cloud work, you&#8217;ll need to call <code>&lt;txp:tru_tags_handler /&gt;</code> from the page you chose in Step 1.  I replaced the default <code>&lt;txp:article /&gt;</code> with something like this:</p>
 <pre>&lt;txp:if_section name="tag"&gt;
@@ -78,9 +81,10 @@ if(0){
 # --- BEGIN PLUGIN CODE ---
 
 
-function tru_tags_field() {
-	return 'Keywords';
-}
+
+#Copyright 2006 Nathan Arthur
+#Released under the GNU Public License, see http://www.opensource.org/licenses/gpl-license.php for details
+#This work is based on ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern
 
 
 function tru_tags_handler($atts) {
@@ -153,8 +157,13 @@ function tru_tags_cloud($atts) {
 	$tags_field = tru_tags_field();
 
 	$section_clause = '';
-	if ($section <> '')
-		$section_clause = " AND Section = '$section'";
+	if ($section <> '') {
+		$keys = split(',', $section);
+		foreach ($keys as $key) {
+			$keyparts[] = " Section = '" . trim($key) . "'";
+		}
+		$section_clause = " AND (" . join(' or ', $keyparts) . ")";
+	}
 
 	include_once txpath.'/publish/search.php';
 	$filter = filterSearch();
@@ -200,6 +209,11 @@ function tru_tags_search_parameter()
 {
 	return strip_tags(gps('q'));
 }
+
+function tru_tags_field() {
+	return 'Keywords';
+}
+
 
 
 
