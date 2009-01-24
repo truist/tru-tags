@@ -1,28 +1,32 @@
 <?php
-//------------------------------------------------------//
-// This file has been decoded with ort_plugindecode.php //
-//------------------------------------------------------//
- 
-#$plugin['name'] = 'tru_tags';
-$plugin['version'] = '3.3';
+
+$plugin['allow_html_help'] = 0;
+$plugin['version'] = 'X.X';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.rainskit.com/';
 $plugin['description'] = 'Article tagging';
-$plugin['type'] = '1';
-$plugin['allow_html_help'] = '0';
- 
+
+// Plugin types:
+// 0 = regular plugin; loaded on the public web side only
+// 1 = admin plugin; loaded on both the public and admin side
+// 2 = library; loaded only when include_plugin() or require_plugin() is called
+$plugin['type'] = 1; 
+
 if (!defined('txpinterface'))
 	@include_once('zem_tpl.php');
- 
-if(0){
+
+if (0) {
 ?>
 # --- BEGIN PLUGIN HELP ---
-To learn more about tru_tags, check out the "introductory article":http://www.rainskit.com/blog/493/trutags-a-tagging-plugin-for-textpattern, "releases page":http://www.rainskit.com/reference/537/tru_tags-releases, "feature list":http://www.rainskit.com/reference/495/trutags-feature-list, "roadmap":http://www.rainskit.com/reference/554/tru_tags-roadmap, and "usage instructions":http://www.rainskit.com/reference/497/trutags-usage-instructions.
+
+To learn more about tru_tags, check out the "introductory article":http://www.rainskit.com/blog/493/trutags-a-tagging-plugin-for-textpattern, "releases page":http://www.rainskit.com/reference/537/tru_tags-releases, "feature list":http://www.rainskit.com/reference/495/trutags-feature-list, "roadmap":http://www.rainskit.com/reference/554/tru_tags-roadmap, and "usage instructions":http://www.rainskit.com/reference/497/trutags-usage-instructions. 
 
 I've taken the detailed help out of the plugin; my apologies.  It was too big and too difficult to keep maintaining on my site and in the plugin.
+
 # --- END PLUGIN HELP ---
 <?php
 }
+
 # --- BEGIN PLUGIN CODE ---
 
 #Copyright 2008 Nathan Arthur
@@ -118,7 +122,7 @@ function tru_tags_from_article($atts) {
 	extract($thisarticle);
 
 	$all_tags = tru_tags_get_tags_for_article($thisid);
-
+	
 	$atts = tru_tags_get_standard_cloud_atts($atts, false, true);
 	$all_tags_for_weight = $all_tags;
 	if ($atts['useoverallcounts']) {
@@ -155,7 +159,7 @@ function tru_tags_if_tag_search($atts, $thing) {
 function tru_tags_tag_parameter($atts, $safehtml = true) {
 	global $tru_tags_prefs;
 	extract(lAtts(array('striphyphens' => '0', 'urlencode' => 0),  $atts, 0));
-
+                                  
 	$parm = urldecode(strip_tags(gps($tru_tags_prefs[PARM_NAME]->value)));
 	if ('lookup' == $striphyphens) {
 		$atts = tru_tags_get_standard_cloud_atts(array(), false, false);
@@ -210,7 +214,7 @@ function tru_tags_related_tags_from_search($atts) {
 				unset($all_tags[$key]);
 			}
 		}
-
+		
 		$cloud_atts = tru_tags_get_standard_cloud_atts($atts, false, false);
 		$all_tags_for_weight = $all_tags;
 		if ($cloud_atts['useoverallcounts']) {
@@ -324,8 +328,8 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 	$tags_weight = array_count_values($all_tags_for_weight);
 
 	foreach ($tags_weight as $tag => $weight) {
-		if (!in_array($tag, $all_tags)
-		   || $tags_weight[$tag] < $mintagcount
+		if (!in_array($tag, $all_tags) 
+		   || $tags_weight[$tag] < $mintagcount 
 		   || $tags_weight[$tag] > $maxtagcount) {
 			unset($tags_weight[$tag]);
 		}
@@ -414,11 +418,11 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 	$tag_search_tag = function_exists("htmlspecialchars_decode") ? htmlspecialchars_decode($tag_search_tag) : html_entity_decode($tag_search_tag);
 	foreach ($tags_weight as $tag => $weight) {
 		$tag_weight = floor($minpercent + ($weight - $min) * $stepvalue);
-
+		
 		$style = '';
 		if ($setsizes)
 			$style = ' style="font-size: ' . $tag_weight . '%;"';
-
+		
 		$tag_class = '';
 		if ($setclasses) {
 			$tag_class = ' class="';
@@ -456,7 +460,7 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 		} else if ($texttransform == 'capfirst') {
 			$tag = ucfirst($tag);
 		}
-
+		
 		if ($generatelinks) {
 			$wholeurl = '"' . $urlprefix . urlencode(str_replace(' ', '-', $tag)) . $urlsuffix . '"';
 			$tags_html[] = '<a href=' . $wholeurl . $tag_class . $style . $titlecount . '>' . htmlspecialchars($tag) . '</a>' . $displaycount;
@@ -528,13 +532,13 @@ function tru_tags_admin_tab($event, $step) {
 	require_privs('tru_tags');
 
 	$results = tru_tags_admin_tab_handle_input();
-
+	
 	$atts = tru_tags_get_standard_cloud_atts(array(), false, false);
 	$all_tags = tru_tags_cloud_query($atts);
 	$cloud = tru_tags_render_cloud($atts, $all_tags, $all_tags);
-
+	
 	$redirects = tru_tags_load_redirects();
-
+	
 	tru_tags_admin_tab_render_page($results, $cloud, $redirects);
 }
 
@@ -545,7 +549,7 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 
 	include(txpath . '/include/txp_prefs.php');
 	global $tru_tags_prefs;
-
+	
 	echo startTable('layout', '', '', '10px').'<tr><td style="border-right:2px solid gray">'.  # I know, I know...
 		startTable('layout', '', '', '', '10px').'<tr><td style="border-bottom:2px solid gray">'.
 			startTable('list', '', '', '', '300px').
@@ -576,8 +580,8 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 			endTable();
 			echo '</td></tr><tr><td style="border-bottom:2px solid gray">';
 		}
-
-
+		
+		
 		echo startTable('list', '', '', '', '100%').
 			tr(tag(gTxt('Article Tag Maintenance').' ('.gTxt('Case Sensitive').'!)', 'th', ' colspan="5"')).
 			tr(
@@ -600,9 +604,9 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 				)
 			).
 		endTable();
-
+		
 	echo '</td></tr><tr><td style="border-bottom:2px solid gray">';
-
+		
 		echo startTable('list', '', '', '', '100%').
 			tr(tag(gTxt('Redirections'), 'th', ' colspan="4"'));
 			foreach ($redirects as $lefttag => $righttag) {
@@ -621,12 +625,12 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 					tda('<a href="#" onclick="if (verify(\''.gTxt('are_you_sure').'\')) document.getElementById(\'redirect\').submit(); return false;">Add new</a>', ' style="vertical-align:middle"').
 					fInput('hidden', 'redirect', '1').
 				'</form>'
-
+				
 			).
 		endTable();
-
+	
 	echo '</td></tr><tr><td>';
-
+	
 		echo startTable('list').
 			tr(tag(gTxt('Preferences'), 'th', ' colspan="2"')).
 			form(
@@ -671,7 +675,7 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 			).
 		endTable().'</td></tr>'.
 		endTable();
-
+	
 	echo '</td></tr>'.endTable();
 }
 
@@ -777,7 +781,7 @@ function tru_tags_admin_redirect_tag($lefttag, $righttag) {
 	if (!$lefttag || !$righttag) {
 		return 'Please enter a value in both fields';
 	}
-
+	
 	if (!safe_query('create table if not exists ' . safe_pfx('tru_tags_redirects').
 		' (lefttag varchar(255) primary key, '.
 		'righttag varchar(255) not null)')) {
@@ -866,7 +870,7 @@ function tru_tags_feed_handler($atom) {
 	extract($thisarticle);
 
 	$tags = tru_tags_get_tags_for_article($thisid);
-
+	
 	if ($tru_tags_prefs[TAGS_IN_FEED_BODY]->value) {
 		$extrabody = '';
 		$FORM_NAME = 'tru_tags_feed_tags';
@@ -1050,7 +1054,7 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 	if (isset($atts['noarticles'])) {
 		unset($atts['noarticles']);
 	}
-
+	
 	if (!isset($atts['limit'])) {
 		$atts['limit'] = '1000';
 	}
@@ -1165,7 +1169,7 @@ function tru_tags_redo_article_search($atts) {
 			if (isset($atts[$cField]))
 				$customPairs[$cField] = $atts[$cField];
 		}
-		if(!empty($customPairs))
+		if(!empty($customPairs)) 
 			$custom =  buildCustomSql($customFields,$customPairs);
 		else
 			$custom = '';
@@ -1199,4 +1203,5 @@ function tru_tags_redo_article_search($atts) {
 
 
 # --- END PLUGIN CODE ---
+
 ?>
