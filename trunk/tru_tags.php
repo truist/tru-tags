@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '1.2';
+$plugin['version'] = '1.3';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://truist.com/';
 $plugin['description'] = 'Tagging support with full integration';
@@ -24,10 +24,10 @@ if(0){
 	<p>This work is based on ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern.  It also contains code adapted from gdtroiano, see http://forum.textpattern.com/viewtopic.php?pid=102875#p102875.</p>
 	<h3>Configuration</h3>
 	<h4>Step 1: Create a new section</h4>
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn8724240044122b7ebde98">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn44517336644122b7ec2cd4">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn957471543441485ac2965f">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn2133299049441485ac2e478">2</a></sup>:</p>
 	<p><img src="http://www.truist.com/images/2.png" height="280" width="398" alt="tag section configuration" class="diagram" /></p>
-	<p class="footnote" id="fn8724240044122b7ebde98"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
-	<p class="footnote" id="fn44517336644122b7ec2cd4"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
+	<p class="footnote" id="fn957471543441485ac2965f"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
+	<p class="footnote" id="fn2133299049441485ac2e478"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
 	<h4>Step 2: Call the plugin from that section</h4>
 	<p>To make tag searching and the default tag cloud work, you&#8217;ll need to call <code>&lt;txp:tru_tags_handler /&gt;</code> from the page you chose in Step 1.  I replaced the default <code>&lt;txp:article /&gt;</code> with something like this:</p>
 <pre>&lt;txp:if_section name="tag"&gt;
@@ -81,8 +81,10 @@ RewriteRule &#94;tag/(.&#43;)/$ &#63;s&#61;tagx&#37;x&#37;t&#61;$1</p>
 	</ol>
 	<h3>Tag reference</h3>
 	<h4><code>tru_tags_handler</code></h4>
-	<p>This is the main function that drives tag search, and shows the generic tag cloud.  It should be called from the page that is used in the &#8216;tag&#8217; section.  It calls <code>tru_tags_cloud</code> by default, or <code>doArticles()</code> (in the Textpattern code) to display tag search results.</p>
-	<p>This tag will accept all of the attributes used by <code>tru_tag_cloud</code>.  See below for details.</p>
+	<p>This is the main function that drives tag search and shows the generic tag cloud.  It should be called from the page that is used in the &#8216;tag&#8217; section.  It generally calls <code>doArticles()</code> (in the Textpattern code) to display tag search results, but if no tag was passed in the url it will call <code>tru_tags_cloud</code> instead.</p>
+	<p>This tag accepts most of the standard <code>txp:article</code> attributes, which will be applied during the tag search.  Note that <code>tru_tags_handler</code> <strong>does not</strong> support using multiple sections with the <code>section</code> attribute, when doing a tag search.  If multiple sections are passed, none are used.</p>
+	<p><strong>Note:</strong> In Textpattern, the <code>limit</code> attribute is defaulted to <code>10</code>, to limit the output to 10 articles per page, and the <code>txp:older</code> and <code>txp:newer</code> tags are used to paginate the full list.  The <code>txp:older</code> and <code>txp:newer</code> tags do not work with tru_tags, but the <code>limit</code> is still used by Textpattern when it outputs the articles.  Therefore, tru_tags uses a default limit of <code>1000</code> when doing an article search.  You can override this limit by setting the <code>limit</code> attribute on <code>tru_tags_handler</code>.</p>
+	<p>This tag will also accept all of the attributes used by <code>tru_tag_cloud</code>.  See below for details.</p>
 	<h4><code>tru_tags_if_has_tags</code></h4>
 	<p>This conditional tag can be used in an article form, and will evaluate its contents (e.g. &#8220;return true&#8221;) if the current article has tags.</p>
 	<h4><code>tru_tags_from_article</code></h4>
@@ -144,7 +146,11 @@ function tru_tags_handler($atts) {
 	}
 	else {
 		$atts['keywords'] = strip_tags($t);
-		$atts['section'] = '';
+		if ($atts['section'] && strpos($atts['section'], ',') !== false)
+			$atts['section'] = '';
+		if (!$atts['limit'])
+			$atts['limit'] = '1000';
+
 		return doArticles($atts, true);
 	}
 }
@@ -157,9 +163,7 @@ function tru_tags_if_has_tags($atts, $thing) {
 	$tags_field = tru_tags_field();
 
 	$rs = safe_row($tags_field, "textpattern", "ID='$thisid' AND $tags_field <> ''");
-	if ($rs) {
-		return parse($thing);
-	}
+	return parse(EvalElse($thing, $rs));
 }
 
 
