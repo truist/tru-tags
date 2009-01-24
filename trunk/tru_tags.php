@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '1.4';
+$plugin['version'] = '1.5';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://truist.com/';
 $plugin['description'] = 'Tagging support with full integration';
@@ -24,10 +24,10 @@ if(0){
 	<p>This work is based on ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern.  It also contains code adapted from gdtroiano, see http://forum.textpattern.com/viewtopic.php?pid=102875#p102875.</p>
 	<h3>Configuration</h3>
 	<h4>Step 1: Create a new section</h4>
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn19922351764425db3189231">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn15898029464425db318e07e">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup><a href="#fn1212418134445703920a9c">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup><a href="#fn150904287144457039258b8">2</a></sup>:</p>
 	<p><img src="http://www.truist.com/images/2.png" height="280" width="398" alt="tag section configuration" class="diagram" /></p>
-	<p class="footnote" id="fn19922351764425db3189231"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
-	<p class="footnote" id="fn15898029464425db318e07e"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
+	<p class="footnote" id="fn1212418134445703920a9c"><sup>1</sup> You can use a different name, but you have to use a special attribute in some of the plugin calls to make  everything work correctly.  See below for details.</p>
+	<p class="footnote" id="fn150904287144457039258b8"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name="tag"&gt;</code> to change the page display in this case.</p>
 	<h4>Step 2: Call the plugin from that section</h4>
 	<p>To make tag searching and the default tag cloud work, you&#8217;ll need to call <code>&lt;txp:tru_tags_handler /&gt;</code> from the page you chose in Step 1.  I replaced the default <code>&lt;txp:article /&gt;</code> with something like this:</p>
 <pre>&lt;txp:if_section name="tag"&gt;
@@ -45,12 +45,9 @@ if(0){
 <pre>&lt;txp:tru_tags_cloud /&gt;</pre>
 	<p>See below for lots of formatting options, including the ability to output a simple list instead of a cloud (using <code>tru_tags_list</code>).</p>
 	<h4>Step 5: Start tagging!</h4>
-	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup><a href="#fn19922351764425db3189231">1</a></sup>.  Be careful not to leave spaces at the beginning and end of tags.  Here&#8217;s a good example:</p>
-	<p><img src="http://www.truist.com/images/3.png" height="110" width="118" alt="tags with spaces, but not next to the commas" class="diagram" /></p>
-	<p>...and a bad one:</p>
-	<p><img src="http://www.truist.com/images/4.png" height="112" width="119" alt="tags with spaces after the commas (WRONG)" class="diagram" /></p>
+	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup><a href="#fn1212418134445703920a9c">1</a></sup>.</p>
 	<p>You&#8217;ll probably want to install Rob Sable&#8217;s <a href="http://www.wilshireone.com/textpattern-plugins/rss-admin-show-adv-opts">rss_admin_show_adv_opts</a>, which will automatically expand the &#8220;Advanced Options&#8221; section of the &#8220;write&#8221; page, when you are writing articles.  That gives you easy access to the Keywords field.</p>
-	<p class="footnote" id="fn19922351764425db3189231"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.</p>
+	<p class="footnote" id="fn1212418134445703920a9c"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.</p>
 	<h4>Step 6: Fancy display customization</h4>
 	<p>You can use <code>tru_tags_if_tag_search</code>, <code>tru_tags_tag_parameter</code>, and <code>tru_tags_search_parameter</code> to customize your page titles or tag search results.  See below for details.  See the titlebar of <a href="http://www.truist.com/">truist.com</a> for an example.</p>
 	<h4>Step 7: Turn on clean urls</h4>
@@ -286,7 +283,11 @@ function tru_tags_list($atts) {
 	$all_tags = array();
 	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4' and Posted < now()");
 	foreach ($rs as $row) {
-		$all_tags = array_merge($all_tags, explode(",", trim(strtolower($row[$tags_field]))));
+		$temp_array = explode(",", trim(strtolower($row[$tags_field])));
+		for ($i = 0; $i < count($temp_array); $i++) {
+			$temp_array[$i] = trim($temp_array[$i]);
+		}
+		$all_tags = array_merge($all_tags, $temp_array);
 	}
 	sort($all_tags);
 
@@ -331,6 +332,8 @@ function tru_tags_list($atts) {
 		$tag_class .= '"';
 
 		//adapted from code by gdtroiano, see http://forum.textpattern.com/viewtopic.php?pid=102875#p102875
+		$titlecount = '';
+		$displaycount= '';
 		$count = $countwrapchars{0} . $tags_weight[$tag] . $countwrapchars{1};
 		if ($showcounts == 'title' || $showcounts == 'both')
 			$titlecount = ' title="' . $count . '"';
