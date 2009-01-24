@@ -4,7 +4,7 @@
 //------------------------------------------------------//
  
 #$plugin['name'] = 'tru_tags';
-$plugin['version'] = '3.0';
+$plugin['version'] = '3.1';
 $plugin['author'] = 'Nathan Arthur';
 $plugin['author_uri'] = 'http://www.truist.com/';
 $plugin['description'] = 'Article tagging';
@@ -325,12 +325,12 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 			$urlprefix = $linkpath;
 			$urlsuffix = $linkpathtail;
 		} else {
-			if ($tru_tags_prefs[CLEAN_URLS]->value) {
+			if (tru_tags_clean_urls()) {
 				$urlprefix = hu . $tru_tags_prefs[TAG_SECTION]->value . '/';
 			} else {
-				$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;t=';
+				$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;' . $tru_tags_prefs[PARM_NAME]->value . '=';
 			}
-			$urlsuffix = ($tru_tags_prefs[CLEAN_URLS]->value ? '/' : '');
+			$urlsuffix = (tru_tags_clean_urls() ? '/' : '');
 		}
 
 		if ($usereltag) {
@@ -416,9 +416,10 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 ### CLEAN URL FUNCTIONS ###
 ###########################
 
-if ($tru_tags_prefs[CLEAN_URLS]->value == 'clean') {
+if (tru_tags_clean_urls()) {
 	register_callback('tru_tags_clean_url_handler', 'pretext');
 }
+
 
 function tru_tags_clean_url_handler($event, $step) {
 	global $tru_tags_prefs;
@@ -443,6 +444,12 @@ function tru_tags_clean_url_handler($event, $step) {
 			$_GET[$tru_tags_prefs[PARM_NAME]->value] = $tag;
 		}
 	}
+}
+
+
+function tru_tags_clean_urls() {
+	global $tru_tags_prefs;
+	return ('clean' == $tru_tags_prefs[CLEAN_URLS]->value);
 }
 
 
@@ -551,7 +558,7 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 			tr(tag(gTxt('Preferences'), 'th', ' colspan="2"')).
 			form(
 				tr(
-					tda(gTxt('Use clean URLs').': ', ' style="vertical-align:middle"').
+					tda(gTxt('Use clean URLs').' ('.gTxt('default is').' '.$tru_tags_prefs[CLEAN_URLS]->default_value.'): ', ' style="vertical-align:middle"').
 					td(radio_list(CLEAN_URLS,
 							array('clean'=>gTxt('clean'), 'messy'=>gTxt('messy')),
 							$tru_tags_prefs[CLEAN_URLS]->value))
@@ -561,7 +568,8 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 					td(text_input(TAG_SECTION, $tru_tags_prefs[TAG_SECTION]->value, '15'))
 				).
 				tr(
-					tda(gTxt('URL parameter for tag search').' (default is "'.$tru_tags_prefs[PARM_NAME]->default_value.'"): ', ' style="vertical-align:middle"').
+					tda(gTxt('URL parameter for tag search').' (default is "'.$tru_tags_prefs[PARM_NAME]->default_value.'"): '.
+						'<br>(you shouldn\'t change this unless you really know what you are doing)', ' style="vertical-align:middle"').
 					td(text_input(PARM_NAME, $tru_tags_prefs[PARM_NAME]->value, '15'))
 				).
 				tr(
@@ -903,12 +911,12 @@ function tru_tags_redirect($destination, $is_full_url) {
 
 function tru_tags_linkify_tag($tag) {
 	global $tru_tags_prefs;
-	if ($tru_tags_prefs[CLEAN_URLS]->value) {
+	if (tru_tags_clean_urls()) {
 		$urlprefix = hu . $tru_tags_prefs[TAG_SECTION]->value . '/';
 	} else {
-		$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;t=';
+		$urlprefix = hu . '?s=' . $tru_tags_prefs[TAG_SECTION]->value . '&amp;' . $tru_tags_prefs[PARM_NAME]->value . '=';
 	}
-	$urlsuffix = ($tru_tags_prefs[CLEAN_URLS]->value ? '/' : '');
+	$urlsuffix = (tru_tags_clean_urls() ? '/' : '');
 	return $urlprefix . urlencode(str_replace(' ', '-', $tag)) . $urlsuffix;
 }
 
