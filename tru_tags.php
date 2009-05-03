@@ -31,9 +31,11 @@ I've taken the detailed help out of the plugin; my apologies.  It was too big an
 
 # --- BEGIN PLUGIN CODE ---
 
-#Copyright 2008 Nathan Arthur
-#Released under the GNU Public License, see http://www.opensource.org/licenses/gpl-license.php for details
-#This work is inspired by ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern
+# Copyright 2009 Nathan Arthur
+# Released under the GNU Public License, see http://www.opensource.org/licenses/gpl-license.php for details
+# This work was originally inspired by ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern
+# Javascript bug fixes were provided by the_ghost - http://victorus.net
+# Javascript code for the tag auto-complete feature was provided by Jim Biancolo - http://www.biancolo.com/
 
 
 ### CONFIGURATION ###
@@ -45,12 +47,16 @@ I've taken the detailed help out of the plugin; my apologies.  It was too big an
 
 # Changing these won't do any good.  They're just here as a convenience for development.
 define('TRU_TAGS_FIELD', 'Keywords');
+define('ENCODING', 'utf-8');
+
 define('CLEAN_URLS', 'clean_urls');
 define('TAG_SECTION', 'tag_section');
 define('PARM_NAME', 'parm');
 define('TAGS_IN_FEED_CATEGORIES', 'tags_in_feed_categories');
 define('TAGS_IN_FEED_BODY', 'tags_in_feed_body');
 define('TAGS_IN_WRITE_TAB', 'tags_in_write_tab');
+define('AUTOCOMPLETE_IN_WRITE_TAB', 'autocomplete_in_write_tab');
+define('UTF_8_CASE', 'utf_8_case');
 
 global $tru_tags_prefs;
 $tru_tags_prefs = tru_tags_load_prefs();
@@ -85,7 +91,7 @@ function tru_tags_handler($atts) {
 function tru_tags_archive($atts) {
 	global $tru_tags_current_archive_tag;
 	$tags = array_unique(tru_tags_cloud_query(tru_tags_get_standard_cloud_atts($atts, false, false)));
-	sort($tags);
+	natcasesort($tags);
 	foreach ($tags as $tag) {
 		$tru_tags_current_archive_tag = $tag;
 		$clean_atts = tru_tags_fixup_query_atts($atts, $tag);
@@ -416,7 +422,7 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 	$stepvalue = ($max == $min) ? 0 : ($maxpercent - $minpercent) / ($max - $min);
 
 	$tags_html = array();
-	$tag_search_tag = tru_tags_tag_parameter(array('striphyphens' => '1'));
+	$tag_search_tag = tru_tags_tag_parameter(array('striphyphens' => 'lookup'));
 	$tag_search_tag = function_exists("htmlspecialchars_decode") ? htmlspecialchars_decode($tag_search_tag) : html_entity_decode($tag_search_tag);
 	foreach ($tags_weight as $tag => $weight) {
 		$tag_weight = floor($minpercent + ($weight - $min) * $stepvalue);
@@ -454,13 +460,13 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 			$displaycount = ' ' . $count;
 
 		if ($texttransform == 'capitalize') {
-			$tag = ucwords($tag);
+			$tag = tru_tags_ucwords($tag);
 		} else if ($texttransform == 'uppercase') {
-			$tag = strtoupper($tag);
+			$tag = tru_tags_strtoupper($tag);
 		} else if ($texttransform == 'lowercase') {
-			$tag = strtolower($tag);
+			$tag = tru_tags_strtolower($tag);
 		} else if ($texttransform == 'capfirst') {
-			$tag = ucfirst($tag);
+			$tag = tru_tags_ucfirst($tag);
 		}
 		
 		if ($generatelinks) {
@@ -523,8 +529,8 @@ if (@txpinterface == 'admin') {
 	add_privs('tru_tags', '1,2');
 	register_tab('extensions', 'tru_tags', 'tru_tags');
 	register_callback('tru_tags_admin_tab', 'tru_tags');
-
-	if ($tru_tags_prefs[TAGS_IN_WRITE_TAB]->value) {
+	
+	if ($tru_tags_prefs[TAGS_IN_WRITE_TAB]->value || $tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value) {
 		register_callback('tru_tags_admin_write_tab_handler', 'article');
 	}
 }
@@ -650,19 +656,20 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 				).
 				tr(
 					tda(gTxt('URL parameter for tag search').' (default is "'.$tru_tags_prefs[PARM_NAME]->default_value.'"): '.
-						'<br>(you shouldn\'t change this unless you really know what you are doing)', ' style="vertical-align:middle"').
+						'<br><em>(you shouldn\'t change this unless you really know what you are doing)</em>', ' style="vertical-align:middle"').
 					td(text_input(PARM_NAME, $tru_tags_prefs[PARM_NAME]->value, '15'))
 				).
 				tr(
 					tda(gTxt('Put tags into RSS/Atom feeds, in "Category" elements').
-						': <br>(you probably want this)', ' style="vertical-align:middle"').
+						': <br><em>(you probably want this)</em>', ' style="vertical-align:middle"').
 					td(yesnoRadio(TAGS_IN_FEED_CATEGORIES, $tru_tags_prefs[TAGS_IN_FEED_CATEGORIES]->value))
 				).
 				tr(
 					tda('Append the tag list to the body of RSS/Atom feeds, '.
-						'with links, and with rel="tag":<br>If this is turned on,'.
+						'with links, and with rel="tag":'.
+						'<br><em>(if this is turned on,'.
 						'you can define a "misc" form named tru_tags_feed_tags '.
-						'that will be used to render the tags in the feed.',
+						'that will be used to render the tags in the feed)</em>',
 						' style="vertical-align:middle"').
 					td(yesnoRadio(TAGS_IN_FEED_BODY, $tru_tags_prefs[TAGS_IN_FEED_BODY]->value))
 				).
@@ -670,6 +677,18 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 					tda(gTxt('Show a clickable list of tags on the "Write" page').': ',
 						' style="vertical-align:middle"').
 					td(yesnoRadio(TAGS_IN_WRITE_TAB, $tru_tags_prefs[TAGS_IN_WRITE_TAB]->value))
+				).
+				tr(
+					tda(gTxt('Autocomplete tags on the "Write" page').': <br>'.
+						'<em>(requires that the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-autocomplete/">jQuery Autocomplete plugin</a> <code>.css</code> and <code>.min.js</code> files be uploaded into a "<code>js</code>" folder on your site)</em>',
+						' style="vertical-align:middle"').
+					td(yesnoRadio(AUTOCOMPLETE_IN_WRITE_TAB, $tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value))
+				).
+				tr(
+					tda(gTxt('Convert tags to lowercase by default').': <br>'.
+						'<em>(you probably want this, unless you are having problems with utf-8 characters)</em>',
+						' style="vertical-align:middle"').
+					td(yesnoRadio(UTF_8_CASE, $tru_tags_prefs[UTF_8_CASE]->value))
 				).
 				tr(
 					td('').
@@ -813,51 +832,68 @@ function tru_tags_admin_delete_redirect($lefttag) {
 
 
 function tru_tags_admin_write_tab_handler($event, $step) {
+	global $tru_tags_prefs;
 	$atts = tru_tags_get_standard_cloud_atts(array(), true, true);
 	$atts['time'] = 'any';
 	$cloud = array_unique(tru_tags_cloud_query($atts));
-	sort($cloud);
+	natcasesort($cloud);
 
 	$id = (empty($GLOBALS['ID']) ? gps('ID') : $GLOBALS['ID']);
 	$article_tags = (empty($id) ? array() : tru_tags_get_tags_for_article($id));
 
 	$links = array();
+	$raw_cloud = '';
 	foreach ($cloud as $tag) {
 		$style = (in_array($tag, $article_tags) ? ' class="tag_chosen"' : '');
 		$links[] = '<a href="#advanced"'.$style.' onclick="this.setAttribute(\\\'class\\\', toggleTag(\\\''.addslashes(addslashes($tag)).'\\\')); return false;">' . addslashes(htmlspecialchars($tag)) . '<\/a>';
+		$raw_cloud .= '"' . addSlashes($tag) . '",';
 	}
+	$raw_cloud = substr($raw_cloud, 0, strlen($raw_cloud) - 1);
 	$to_insert = join(', ', $links);
 	$to_insert = "<style>a.tag_chosen{background-color: #FEB; color: black;}</style>" . $to_insert;
+	
+	if ($tru_tags_prefs[TAGS_IN_WRITE_TAB]->value) {
+		$js = <<<EOF
+			var keywordsField = document.getElementById('keywords');
+			keywordsField.parentNode.appendChild(document.createElement('br'));
+			var cloud = document.createElement('span');
+			cloud.setAttribute('class', 'tru_tags_admin_tags');
+			cloud.innerHTML = '{$to_insert}';
+			keywordsField.parentNode.appendChild(cloud);
 
-	$js = <<<EOF
-		var keywordsField = document.getElementById('keywords');
-		var parent = keywordsField.parentNode;
-		parent.appendChild(document.createElement('br'));
-		var cloud = document.createElement('span');
-		cloud.setAttribute('class', 'tru_tags_admin_tags');
-		cloud.innerHTML = '{$to_insert}';
-		parent.appendChild(cloud);
-
-		function toggleTag(tagName) {
-			var regexTag = tagName.replace(/([\\\\\^\\$*+[\\]?{}.=!:(|)])/g,"\\\\$1");
-			var tagRegex = new RegExp("((^|,)\\\s*)" + regexTag + "\\\s*(,\\\s*|$)");
-			var textarea = document.getElementById('keywords');
-			var curval = textarea.value.replace(/,?\s+$/, '');
-			if ('' == curval) {
-				textarea.value = tagName;
-			} else if (curval.match(tagRegex)) {
-				textarea.value = curval.replace(tagRegex, '$1').replace(/,?\s+$/, '');
-				return '';
-			} else if (',' == curval.charAt(curval.length - 1)) {
-				textarea.value += ' ' + tagName;
-			} else {
-				textarea.value += ', ' + tagName;
+			function toggleTag(tagName) {
+				var regexTag = tagName.replace(/([\\\\\^\\$*+[\\]?{}.=!:(|)])/g,"\\\\$1");
+				var tagRegex = new RegExp("((^|,)\\\s*)" + regexTag + "\\\s*(,\\\s*|$)");
+				var textarea = document.getElementById('keywords');
+				var curval = textarea.value.replace(/,?\s+$/, '');
+				if ('' == curval) {
+					textarea.value = tagName;
+				} else if (curval.match(tagRegex)) {
+					textarea.value = curval.replace(tagRegex, '$1').replace(/,?\s+$/, '');
+					return '';
+				} else if (',' == curval.charAt(curval.length - 1)) {
+					textarea.value += ' ' + tagName;
+				} else {
+					textarea.value += ', ' + tagName;
+				}
+				return 'tag_chosen';
 			}
-			return 'tag_chosen';
-		}
 EOF;
+		echo script_js($js);
+	}
 
-	echo script_js($js);
+	if ($tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value) {
+		echo <<<EOF
+			<link rel="stylesheet" type="text/css" href="../js/jquery.autocomplete.css" media="projection, screen" />
+			<script src="../js/jquery.autocomplete.min.js" type="text/javascript"></script>
+			<script language="JavaScript" type="text/javascript"><!--
+				$(document).ready(function(){ var tags = new Array({$raw_cloud});
+					$("#keywords").autocomplete(tags, { multiple: true, mustMatch: false, autoFill: false });
+				});
+			//--></script>
+EOF;
+	}
+
 }
 
 
@@ -938,6 +974,8 @@ function tru_tags_load_prefs() {
 	$prefs[TAGS_IN_FEED_CATEGORIES] = new tru_tags_pref(TAGS_IN_FEED_CATEGORIES, '1', 'boolean');
 	$prefs[TAGS_IN_FEED_BODY] = new tru_tags_pref(TAGS_IN_FEED_BODY, '0', 'boolean');
 	$prefs[TAGS_IN_WRITE_TAB] = new tru_tags_pref(TAGS_IN_WRITE_TAB, '1', 'boolean');
+	$prefs[AUTOCOMPLETE_IN_WRITE_TAB] = new tru_tags_pref(AUTOCOMPLETE_IN_WRITE_TAB, '0', 'boolean');
+	$prefs[UTF_8_CASE] = new tru_tags_pref(UTF_8_CASE, '1', 'boolean');
 
 	if (mysql_query("describe " . PFX . "tru_tags_prefs")) {
 		$rs = safe_rows('*', 'tru_tags_prefs', '1');
@@ -1076,10 +1114,39 @@ function tru_tags_fixup_query_atts($atts, $tag_parameter) {
 
 
 function tru_tags_strtolower($str) {
-	if (function_exists("mb_strtolower")) {
-		return mb_strtolower($str, "UTF-8");
+	global $tru_tags_prefs;
+	if ($tru_tags_prefs[UTF_8_CASE]->value) {
+		if (function_exists('mb_strtolower')) {
+			return mb_strtolower($str, ENCODING);
+		} else {
+			return strtolower($str);
+		}
 	} else {
-		return strtolower($str);
+		return $str;
+	}
+}
+
+function tru_tags_strtoupper($str) {
+	if (function_exists('mb_strtoupper')) {
+		return mb_strtoupper($str, ENCODING);
+	} else {
+		return strtoupper($str);
+	}
+}
+
+function tru_tags_ucfirst($str) {
+	if (function_exists('mb_substr') && function_exists('mb_strtoupper') && function_exists('mb_strlen') && mb_strlen($str, ENCODING) > 1) {
+		return mb_strtoupper(mb_substr($str, 0, 1, ENCODING), ENCODING) . mb_substr($str, 1, mb_strlen($str, ENCODING), ENCODING);
+	} else {
+		return ucfirst($str);
+	}
+}
+
+function tru_tags_ucwords($str) {
+	if (function_exists('mb_convert_case')) {
+		return mb_convert_case($str, MB_CASE_TITLE, ENCODING);
+	} else {
+		return ucwords($str);
 	}
 }
 

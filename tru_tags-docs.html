@@ -10,6 +10,7 @@
 		<li><a href="#archivepage">Archive page</a></li>
 		<li><a href="#relatedtags">Related-tags cloud</a></li>
 		<li><a href="#customadmin">Admin-side tag display</a></li>
+		<li><a href="#adminauto">Admin-side tag auto-complete</a></li>
 		<li><a href="#ongoingmaint">Tag maintenance</a></li>
 		<li><a href="#customsettings">Advanced settings</a></li>
 	</ul></li>
@@ -46,13 +47,13 @@
 
 	<h4>Step 1: Create a new section</h4>
 
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup class="footnote"><a href="#fn898606194493c8a4fe2dd4">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote"><a href="#fn1167262531493c8a4fe7bf7">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup class="footnote"><a href="#fn14347118749fd17a39a838">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote"><a href="#fn14305240149fd17a39f660">2</a></sup>:</p>
 
 	<p><txp:image id="2" class="diagram" /></p>
 
-	<p class="footnote" id="fn898606194493c8a4fe2dd4"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
+	<p class="footnote" id="fn14347118749fd17a39a838"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
 
-	<p class="footnote" id="fn1167262531493c8a4fe7bf7"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
+	<p class="footnote" id="fn14305240149fd17a39f660"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
 
 	<h4>Step 2: Call the plugin from that section</h4>
 
@@ -84,11 +85,11 @@
 
 	<h4>Step 5: Start tagging!</h4>
 
-	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;Write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn898606194493c8a4fe2dd4">1</a></sup>.  </p>
+	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;Write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn14347118749fd17a39a838">1</a></sup>.  </p>
 
 	<p>You&#8217;ll probably want to install Rob Sable&#8217;s <a href="http://www.wilshireone.com/textpattern-plugins/rss-admin-show-adv-opts">rss_admin_show_adv_opts</a>, which will automatically expand the &#8220;Advanced Options&#8221; section of the &#8220;Write&#8221; page, when you are writing articles.  That gives you easy access to the Keywords field.</p>
 
-	<p class="footnote" id="fn898606194493c8a4fe2dd4"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.  Tags with both spaces and dashes will not work correctly.</p>
+	<p class="footnote" id="fn14347118749fd17a39a838"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.  Tags with both spaces and dashes will not work correctly.</p>
 
 	<p><hr></p>
 
@@ -200,6 +201,10 @@
 	overflow: auto; /* this will cause a scrollbar to appear */
 }</pre>
 
+	<h4 id="adminauto">Turn on tag auto-completion on the admin side</h4>
+
+	<p>If you have the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-autocomplete/">jQuery Autocomplete plugin</a> installed, tru_tags can auto-complete tag names in the Keywords field on the Write tab.  In order for this to work, the <code>jquery.autocomplete.css</code> and <code>jquery.autocomplete.min.js</code> files have to be installed in a &#8220;js&#8221; folder at the root of your site.  Once that is done, you will also need to turn on the feature using one of the configuration options on the plugin Extension tab (in the admin side).</p>
+
 	<h4 id="ongoingmaint">Ongoing tag maintenance</h4>
 
 	<p>Over time, you may find yourself with a number of articles that you&#8217;d like to re-tag, but with no easy way to update the tags on all those articles at once.  See the Extensions-&gt;tru_tags page for a few tools that can help you with that.  </p>
@@ -239,7 +244,7 @@
 	<h5>Attributes:</h5>
 
 	<ul>
-		<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn898606194493c8a4fe2dd4">1</a></sup>, as defined by Textpattern.</li>
+		<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn14347118749fd17a39a838">1</a></sup>, as defined by Textpattern.</li>
 		<li><code>generatelinks=&quot;0&quot;</code> will show the tags without generating links</li>
 		<li><code>linkpath</code> can be used to generate tag links that don&#8217;t go to the default location.  For example, setting <code>linkpath=&quot;http://technorati.com/tag/&quot;</code> will cause tru_tags to generate tag links like <code>http://technorati.com/tag/sometag</code>.</li>
 		<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a &#8220;/&#8221; on the end of the generated <code>linkpath</code> url.</li>
@@ -256,7 +261,7 @@
 	</ul></li>
 	</ul>
 
-	<p class="footnote" id="fn898606194493c8a4fe2dd4"><sup>1</sup> As with all Textpattern tags, <code>class</code> is only used if you specify an appropriate <code>wraptag</code> and <code>breakclass</code> is only used if you specify an appropriate <code>break</code>.</p>
+	<p class="footnote" id="fn14347118749fd17a39a838"><sup>1</sup> As with all Textpattern tags, <code>class</code> is only used if you specify an appropriate <code>wraptag</code> and <code>breakclass</code> is only used if you specify an appropriate <code>break</code>.</p>
 
 	<h4 id="tru_tags_cloud"><code>tru_tags_cloud</code></h4>
 
