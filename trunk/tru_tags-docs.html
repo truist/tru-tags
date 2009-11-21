@@ -23,6 +23,7 @@
 		<li><a href="#tru_tags_cloud">tru_tags_list</a></li>
 		<li><a href="#tru_tags_if_tag_search">tru_tags_if_tag_search</a></li>
 		<li><a href="#tru_tags_tag_parameter">tru_tags_tag_parameter</a></li>
+		<li><a href="#tru_tags_search_result_excerpt">tru_tags_search_result_excerpt</a></li>
 		<li><a href="#tru_tags_search_parameter">tru_tags_search_parameter</a></li>
 		<li><a href="#tru_tags_related_tags_from_search">tru_tags_related_tags_from_search</a></li>
 		<li><a href="#tru_tags_archive">tru_tags_archive</a></li>
@@ -47,13 +48,13 @@
 
 	<h4>Step 1: Create a new section</h4>
 
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup class="footnote"><a href="#fn14347118749fd17a39a838">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote"><a href="#fn14305240149fd17a39f660">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup class="footnote"><a href="#fn12119683414b076f25e2842">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote"><a href="#fn19063480844b076f25e7667">2</a></sup>:</p>
 
 	<p><txp:image id="2" class="diagram" /></p>
 
-	<p class="footnote" id="fn14347118749fd17a39a838"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
+	<p class="footnote" id="fn12119683414b076f25e2842"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
 
-	<p class="footnote" id="fn14305240149fd17a39f660"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
+	<p class="footnote" id="fn19063480844b076f25e7667"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
 
 	<h4>Step 2: Call the plugin from that section</h4>
 
@@ -85,11 +86,9 @@
 
 	<h4>Step 5: Start tagging!</h4>
 
-	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;Write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn14347118749fd17a39a838">1</a></sup>.  </p>
+	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;Write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn12119683414b076f25e2842">1</a></sup>.  </p>
 
-	<p>You&#8217;ll probably want to install Rob Sable&#8217;s <a href="http://www.wilshireone.com/textpattern-plugins/rss-admin-show-adv-opts">rss_admin_show_adv_opts</a>, which will automatically expand the &#8220;Advanced Options&#8221; section of the &#8220;Write&#8221; page, when you are writing articles.  That gives you easy access to the Keywords field.</p>
-
-	<p class="footnote" id="fn14347118749fd17a39a838"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.  Tags with both spaces and dashes will not work correctly.</p>
+	<p class="footnote" id="fn12119683414b076f25e2842"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.  Tags with both spaces and dashes will not work correctly.</p>
 
 	<p><hr></p>
 
@@ -227,7 +226,7 @@
 
 	<p>This tag accepts most of the standard <code>txp:article</code> <a href="http://textpattern.net/wiki/index.php?title=Txp:article_/">attributes</a>, which will be applied during the tag search.  Note that <code>tru_tags_handler</code> <strong>does not</strong> support using multiple sections with the <code>section</code> attribute, when doing a tag search.  If multiple sections are passed, none are used.</p>
 
-	<p>If a tru_tags_handler is called for a tag that is no longer valid, it will redirect the user to the site&#8217;s default 404 page.  You can override this behavior with the <code>noarticles</code> attribute, which accepts a <span class="caps">URL</span> that it will redirect to, instead.  </p>
+	<p>If a tru_tags_handler is called for a tag that is no longer valid, it will redirect the user to the site&#8217;s default 404 page.  You can override this behavior with the <code>noarticles</code> attribute, which accepts a <span class="caps">URL</span> that it will redirect to, instead.  You can turn off this behavior by setting the <code>404redirect</code> attribute to <code>0</code>.</p>
 
 	<p><strong>Note:</strong> In Textpattern, the <code>limit</code> attribute is defaulted to <code>10</code>, to limit the output to 10 articles per page, and the <code>txp:older</code> and <code>txp:newer</code> tags are used to paginate the full list.  The <code>txp:older</code> and <code>txp:newer</code> tags do not work with tru_tags, but the <code>limit</code> is still used by Textpattern when it outputs the articles.  Therefore, tru_tags uses a default limit of <code>1000</code> when doing an article search.  You can override this limit by setting the <code>limit</code> attribute on <code>tru_tags_handler</code>.</p>
 
@@ -244,7 +243,7 @@
 	<h5>Attributes:</h5>
 
 	<ul>
-		<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn14347118749fd17a39a838">1</a></sup>, as defined by Textpattern.</li>
+		<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn12119683414b076f25e2842">1</a></sup>, as defined by Textpattern.</li>
 		<li><code>generatelinks=&quot;0&quot;</code> will show the tags without generating links</li>
 		<li><code>linkpath</code> can be used to generate tag links that don&#8217;t go to the default location.  For example, setting <code>linkpath=&quot;http://technorati.com/tag/&quot;</code> will cause tru_tags to generate tag links like <code>http://technorati.com/tag/sometag</code>.</li>
 		<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a &#8220;/&#8221; on the end of the generated <code>linkpath</code> url.</li>
@@ -261,7 +260,7 @@
 	</ul></li>
 	</ul>
 
-	<p class="footnote" id="fn14347118749fd17a39a838"><sup>1</sup> As with all Textpattern tags, <code>class</code> is only used if you specify an appropriate <code>wraptag</code> and <code>breakclass</code> is only used if you specify an appropriate <code>break</code>.</p>
+	<p class="footnote" id="fn12119683414b076f25e2842"><sup>1</sup> As with all Textpattern tags, <code>class</code> is only used if you specify an appropriate <code>wraptag</code> and <code>breakclass</code> is only used if you specify an appropriate <code>break</code>.</p>
 
 	<h4 id="tru_tags_cloud"><code>tru_tags_cloud</code></h4>
 
@@ -347,6 +346,14 @@
 		<li><code>striphyphens=&quot;lookup&quot;</code> will actually look up the specific tag name that you have used, and return it.  This is useful if you have some tags with hyphens and some with spaces, but it has to go query the database every time so it isn&#8217;t configured this way by default.</li>
 		<li><code>urlencode=&quot;1&quot;</code> will url-encode the tag name, so you can embed it in a link.</li>
 	</ul>
+
+	<h4 id="tru_tags_search_result_excerpt"><code>tru_tags_search_result_excerpt</code></h4>
+
+	<p>This tag works exactly like <a href="http://textpattern.net/wiki/index.php?title=search_result_excerpt">search_result_excerpt</a>, except that <code>search_result_excerpt</code> doesn&#8217;t work correctly with tru_tags tag-searches, so this tag works around that problem.  Use this tag in any situation where you would have used <code>search_result_excerpt</code>, even for regular (non-tru_tags) searches.</p>
+
+	<h5>Attributes:</h5>
+
+	<p>This tag supports all the attributes of <a href="http://textpattern.net/wiki/index.php?title=search_result_excerpt">search_result_excerpt</a>.</p>
 
 	<h4 id="tru_tags_search_parameter"><code>tru_tags_search_parameter</code></h4>
 
