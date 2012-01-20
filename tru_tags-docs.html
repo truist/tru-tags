@@ -48,13 +48,13 @@
 
 	<h4>Step 1: Create a new section</h4>
 
-	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup class="footnote"><a href="#fn12119683414b076f25e2842">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote"><a href="#fn19063480844b076f25e7667">2</a></sup>:</p>
+	<p>tru_tags depends on the existence of a special Textpattern section named &#8220;tag,&#8221; by default<sup class="footnote"><a href="#fn3243036704d811a76ee5c8">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote"><a href="#fn10431091744d811a76f33f0">2</a></sup>:</p>
 
 	<p><txp:image id="2" class="diagram" /></p>
 
-	<p class="footnote" id="fn12119683414b076f25e2842"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
+	<p class="footnote" id="fn3243036704d811a76ee5c8"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
 
-	<p class="footnote" id="fn19063480844b076f25e7667"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
+	<p class="footnote" id="fn10431091744d811a76f33f0"><sup>2</sup> Note that I use the &#8216;default&#8217; page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
 
 	<h4>Step 2: Call the plugin from that section</h4>
 
@@ -86,9 +86,11 @@
 
 	<h4>Step 5: Start tagging!</h4>
 
-	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;Write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn12119683414b076f25e2842">1</a></sup>.  </p>
+	<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the &#8220;Advanced Options&#8221; link on the left side of the &#8220;Write&#8221; page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn3243036704d811a76ee5c8">1</a></sup>.  </p>
 
-	<p class="footnote" id="fn12119683414b076f25e2842"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.  Tags with both spaces and dashes will not work correctly.</p>
+	<p>Make sure that your articles are in a section that is configured to be searchable.  <code>tru_tags</code> will filter out articles from sections that aren&#8217;t searchable.  This is a common question on the <a href="http://forum.textpattern.com/viewtopic.php?id=15084">forum</a>.  Please look there first if you are having problems or have any questions &#8211; they are often addressed there.</p>
+
+	<p class="footnote" id="fn3243036704d811a76ee5c8"><sup>1</sup> Tags with spaces will generate urls with dashes, which will work correctly.  Tags with dashes will also work correctly.  Tags with both spaces and dashes will not work correctly.</p>
 
 	<p><hr></p>
 
@@ -243,7 +245,7 @@
 	<h5>Attributes:</h5>
 
 	<ul>
-		<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn12119683414b076f25e2842">1</a></sup>, as defined by Textpattern.</li>
+		<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn3243036704d811a76ee5c8">1</a></sup>, as defined by Textpattern.</li>
 		<li><code>generatelinks=&quot;0&quot;</code> will show the tags without generating links</li>
 		<li><code>linkpath</code> can be used to generate tag links that don&#8217;t go to the default location.  For example, setting <code>linkpath=&quot;http://technorati.com/tag/&quot;</code> will cause tru_tags to generate tag links like <code>http://technorati.com/tag/sometag</code>.</li>
 		<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a &#8220;/&#8221; on the end of the generated <code>linkpath</code> url.</li>
@@ -260,7 +262,7 @@
 	</ul></li>
 	</ul>
 
-	<p class="footnote" id="fn12119683414b076f25e2842"><sup>1</sup> As with all Textpattern tags, <code>class</code> is only used if you specify an appropriate <code>wraptag</code> and <code>breakclass</code> is only used if you specify an appropriate <code>break</code>.</p>
+	<p class="footnote" id="fn3243036704d811a76ee5c8"><sup>1</sup> As with all Textpattern tags, <code>class</code> is only used if you specify an appropriate <code>wraptag</code> and <code>breakclass</code> is only used if you specify an appropriate <code>break</code>.</p>
 
 	<h4 id="tru_tags_cloud"><code>tru_tags_cloud</code></h4>
 
