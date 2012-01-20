@@ -227,10 +227,12 @@ function tru_tags_related_tags_from_search($atts) {
 		if ($rs) {
 			while ($a = nextRow($rs)) {
 				$article_tags = array();
-				if (array_key_exists($tags_field, $a)) {
+				if (isset($a[$tags_field])) {
 					$article_tags = explode(",", trim(tru_tags_strtolower($a[$tags_field])));
 				}
-				$all_tags = array_merge($all_tags, tru_tags_trim_tags($article_tags));
+				# faster implementation of array_merge(), thanks to whocarez
+				# (http://forum.textpattern.com/viewtopic.php?pid=238373#p238373)
+				foreach(tru_tags_trim_tags($article_tags) as $i) {$all_tags[] = $i;}
 			}
 		}
 
@@ -327,10 +329,12 @@ function tru_tags_cloud_query($atts) {
 	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4'" . $time);
 	foreach ($rs as $row) {
 		$temp_array = array();
-		if (array_key_exists($tags_field, $row)) {
+		if (isset($row[$tags_field])) {
 			$temp_array = explode(",", trim(tru_tags_strtolower($row[$tags_field])));
 		}
-		$all_tags = array_merge($all_tags, tru_tags_trim_tags($temp_array));
+		# faster implementation of array_merge(), thanks to whocarez
+		# (http://forum.textpattern.com/viewtopic.php?pid=238373#p238373)
+		foreach(tru_tags_trim_tags($temp_array) as $i) {$all_tags[] = $i;}
 	}
 
 	return $all_tags;
@@ -1089,7 +1093,7 @@ function tru_tags_get_tags_for_article($articleID) {
 	} else {
 		$tags_field = TRU_TAGS_FIELD;
 		$rs = safe_row($tags_field, "textpattern", "ID='$articleID' AND $tags_field <> ''");
-		if (array_key_exists($tags_field, $rs)) {
+		if (isset($rs[$tags_field])) {
 			$keywords = $rs[$tags_field];
 		}
 	}
