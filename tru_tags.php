@@ -62,6 +62,23 @@ global $tru_tags_prefs;
 $tru_tags_prefs = tru_tags_load_prefs();
 
 
+### TAG REGISTRATION ###
+########################
+
+Txp::get('\Textpattern\Tag\Registry')
+	->register('tru_tags_handler')
+	->register('tru_tags_if_has_tags')
+	->register('tru_tags_from_article')
+	->register('tru_tags_cloud')
+	->register('tru_tags_list')
+	->register('tru_tags_if_tag_search')
+	->register('tru_tags_tag_parameter')
+	->register('tru_tags_search_result_excerpt')
+	->register('tru_tags_search_parameter')
+	->register('tru_tags_related_tags_from_search')
+	->register('tru_tags_archive')
+	->register('tru_tags_current_archive_tag');
+
 ### PRIMARY TAG FUNCTIONS ###
 #############################
 
