@@ -810,9 +810,9 @@ function tru_tags_admin_replace_tag($matchtag, $replacetag, $allow_blank_replace
 	$replacetag = trim($replacetag);
 	if ($matchtag && ($allow_blank_replacetag || $replacetag)) {
 		if (safe_update('textpattern', TRU_TAGS_FIELD.'=trim(both \',\' from replace(concat(",", '.TRU_TAGS_FIELD.', ","), concat(",", \''.addslashes($matchtag).'\', ","), \','.addslashes($replacetag).',\'))', '1')) {
-			return 'Updated '.mysql_affected_rows().' rows ("'.htmlspecialchars($matchtag).'"=>"'.htmlspecialchars($replacetag).'")';
+			return 'Updated '.mysqli_affected_rows().' rows ("'.htmlspecialchars($matchtag).'"=>"'.htmlspecialchars($replacetag).'")';
 		} else {
-			return 'Error: ' . mysql_error();
+			return 'Error: ' . mysqli_error();
 		}
 	} else {
 		return 'Please enter a value in both fields';
@@ -1014,7 +1014,7 @@ function tru_tags_load_prefs() {
 	$prefs[AUTOCOMPLETE_IN_WRITE_TAB] = new tru_tags_pref(AUTOCOMPLETE_IN_WRITE_TAB, '0', 'boolean');
 	$prefs[UTF_8_CASE] = new tru_tags_pref(UTF_8_CASE, '1', 'boolean');
 
-	if (mysql_query("describe " . PFX . "tru_tags_prefs")) {
+	if (safe_query("describe " . PFX . "tru_tags_prefs")) {
 		$rs = safe_rows('*', 'tru_tags_prefs', '1');
 		foreach ($rs as $row) {
 			$prefs[$row['name']]->value = $row['value'];
@@ -1043,7 +1043,7 @@ function tru_tags_redirect_if_needed($tag_parameter) {
 
 function tru_tags_load_redirects() {
 	$redirects = array();
-	if (mysql_query("describe " . PFX . "tru_tags_redirects")) {
+	if (safe_query("describe " . PFX . "tru_tags_redirects")) {
 		$rs = safe_rows('*', 'tru_tags_redirects', '1 order by lefttag');
 		foreach ($rs as $row) {
 			$redirects[$row['lefttag']] = $row['righttag'];
