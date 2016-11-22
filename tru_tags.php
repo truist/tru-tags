@@ -339,7 +339,7 @@ function tru_tags_cloud_query($atts) {
 	global $prefs;
 	extract($prefs);
 	if (!$publish_expired_articles) {
-		$time .= " and (now() <= Expires or Expires = ".NULLDATETIME.")";
+		$time .= " and (now() <= Expires or Expires IS NULL)";
 	}
 
 	$all_tags = array();
