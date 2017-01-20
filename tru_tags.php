@@ -1000,7 +1000,7 @@ function tru_tags_feed_handler($atom) {
 #################################
 
 class tru_tags_pref {
-	function tru_tags_pref($name, $default_value, $type) {
+	function __construct($name, $default_value, $type) {
 		$this->name = $name;
 		$this->value = $default_value;
 		$this->default_value = $default_value;
