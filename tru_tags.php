@@ -31,11 +31,16 @@ I've taken the detailed help out of the plugin; my apologies.  It was too big an
 
 # --- BEGIN PLUGIN CODE ---
 
-# Copyright 2009 Nathan Arthur
+# Copyright 2017 Nathan Arthur
 # Released under the GNU Public License, see http://www.opensource.org/licenses/gpl-license.php for details
+#
 # This work was originally inspired by ran_tags by Ran Aroussi, originally found at http://aroussi.com/article/45/tagging-textpattern
 # Javascript bug fixes were provided by the_ghost - http://victorus.net
 # Javascript code for the tag auto-complete feature was provided by Jim Biancolo - http://www.biancolo.com/
+# Fixes for Textpattern 4.6 provided by:
+#   - Rimas Kudelis; https://github.com/rimas-kudelis
+#   - jools-r; https://github.com/jools-r
+#   - Simon Finch; https://github.com/spiffin
 
 
 ### CONFIGURATION ###
