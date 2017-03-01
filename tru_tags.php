@@ -575,7 +575,7 @@ if (@txpinterface == 'admin') {
 	register_callback('tru_tags_admin_tab', 'tru_tags');
 
 	if ($tru_tags_prefs[TAGS_IN_WRITE_TAB]->value || $tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value) {
-		register_callback('tru_tags_admin_write_tab_handler', 'article');
+		register_callback('tru_tags_admin_write_tab_handler', 'article_ui', 'keywords');
 	}
 }
 
@@ -875,7 +875,7 @@ function tru_tags_admin_delete_redirect($lefttag) {
 }
 
 
-function tru_tags_admin_write_tab_handler($event, $step) {
+function tru_tags_admin_write_tab_handler($event, $step, $data) {
 	global $tru_tags_prefs;
 	$atts = tru_tags_get_standard_cloud_atts(array(), true, true, true);
 	$cloud = array_unique(tru_tags_cloud_query($atts));
@@ -938,7 +938,7 @@ function tru_tags_admin_write_tab_handler($event, $step) {
 				element.setAttribute('className', className); /* for IE */
 			}
 EOF;
-		echo script_js($js);
+		return $data . script_js($js);
 	}
 
 	if ($tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value) {
