@@ -333,18 +333,27 @@ function tru_tags_cloud_query($atts) {
 	$filter = tru_tags_filter_sections($excludesection);
 	$filter .= ($filtersearch ? filterSearch() : '');
 
+	// Using SQL caching capabilities. Txp 4.6+
+	if (function_exists('now')) {
+		$where_posted = now('posted');
+		$where_expired = " AND (".now('expires')." <= Expires OR Expires IS NULL)";
+	} else {
+		$where_posted = "now()";
+		$where_expired = " AND (now() <= Expires OR Expires = ".NULLDATETIME.")";
+	}
+
 	switch ($time) {
 		case 'any':
 			$time = ""; break;
 		case 'future':
-			$time = " and Posted > now()"; break;
+			$time = " AND Posted > ".$where_posted; break;
 		default:
-			$time = " and Posted <= now()";
+			$time = " AND Posted <= ".$where_posted;
 	}
 	global $prefs;
 	extract($prefs);
 	if (!$publish_expired_articles) {
-		$time .= " and (now() <= Expires or Expires IS NULL)";
+		$time .= $where_expired;
 	}
 
 	$all_tags = array();
@@ -1303,13 +1312,20 @@ function tru_tags_redo_article_search($atts) {
 	$author    = (!$author)    ? '' : " and AuthorID = '".doslash($author)."'";
 	$month     = (!$month)     ? '' : " and Posted like '".doSlash($month)."%'";
 	$id        = (!$id)        ? '' : " and ID = '".intval($id)."'";
+
+	// Using SQL caching capabilities. Txp 4.6+
+	if (function_exists('now')) {
+		$where_posted = now('posted');
+	} else {
+		$where_posted = "now()";
+	}
 	switch ($time) {
 		case 'any':
 			$time = ""; break;
 		case 'future':
-			$time = " and Posted > now()"; break;
+			$time = " AND Posted > ".$where_posted; break;
 		default:
-			$time = " and Posted < now()";
+			$time = " AND Posted <= ".$where_posted;
 	}
 	if (!is_numeric($status))
 		$status = getStatusNum($status);
