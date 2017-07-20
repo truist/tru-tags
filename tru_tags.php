@@ -796,12 +796,6 @@ function tru_tags_admin_update_prefs() {
 
 
 function tru_tags_upsert_pref($name, $value) {
-	if (!safe_query('create table if not exists ' . safe_pfx('tru_tags_prefs').
-		' (name varchar(255) primary key, '.
-		'value varchar(255) not null)')) {
-		return 'Serious error - unable to create the ' . safe_pfx('tru_tags_prefs') . ' table.';
-	}
-
 	return safe_upsert('tru_tags_prefs', 'value="'.$value.'"', 'name="'.$name.'"');
 }
 
@@ -847,12 +841,6 @@ function tru_tags_admin_redirect_tag($lefttag, $righttag) {
 	$righttag = addslashes(tru_tags_strtolower(trim($righttag)));
 	if (!$lefttag || !$righttag) {
 		return 'Please enter a value in both fields';
-	}
-
-	if (!safe_query('create table if not exists ' . safe_pfx('tru_tags_redirects').
-		' (lefttag varchar(255) primary key, '.
-		'righttag varchar(255) not null)')) {
-		return 'Serious error - unable to create the ' . safe_pfx('tru_tags_redirects') . ' table.';
 	}
 
 	if (safe_insert('tru_tags_redirects', 'lefttag="'.$lefttag.'",righttag="'.$righttag.'"')) {
@@ -1036,11 +1024,13 @@ function tru_tags_load_prefs() {
 	$prefs[AUTOCOMPLETE_IN_WRITE_TAB] = new tru_tags_pref(AUTOCOMPLETE_IN_WRITE_TAB, '0', 'boolean');
 	$prefs[UTF_8_CASE] = new tru_tags_pref(UTF_8_CASE, '1', 'boolean');
 
-	if (safe_query("describe " . PFX . "tru_tags_prefs")) {
-		$rs = safe_rows('*', 'tru_tags_prefs', '1');
-		foreach ($rs as $row) {
-			$prefs[$row['name']]->value = $row['value'];
-		}
+	if ( !(getRows("SHOW TABLES LIKE '".PFX."tru_tags_prefs'")) ) {
+		safe_create("tru_tags_prefs", "`name` varchar(250) NOT NULL, `value` varchar(255) NOT NULL, PRIMARY KEY (`name`)");
+	}
+
+	$rs = safe_rows('*', 'tru_tags_prefs', '1');
+	foreach ($rs as $row) {
+		$prefs[$row['name']]->value = $row['value'];
 	}
 
 	return $prefs;
@@ -1065,12 +1055,16 @@ function tru_tags_redirect_if_needed($tag_parameter) {
 
 function tru_tags_load_redirects() {
 	$redirects = array();
-	if (safe_query("describe " . PFX . "tru_tags_redirects")) {
-		$rs = safe_rows('*', 'tru_tags_redirects', '1 order by lefttag');
-		foreach ($rs as $row) {
-			$redirects[$row['lefttag']] = $row['righttag'];
-		}
+
+	if ( !(getRows("SHOW TABLES LIKE '".PFX."tru_tags_redirects'")) ) {
+		safe_create("tru_tags_redirects", "`lefttag` varchar(250) NOT NULL, `righttag` varchar(255) NOT NULL, PRIMARY KEY (`lefttag`)");
 	}
+
+	$rs = safe_rows('*', 'tru_tags_redirects', '1 order by lefttag');
+	foreach ($rs as $row) {
+		$redirects[$row['lefttag']] = $row['righttag'];
+	}
+
 	return $redirects;
 }
 
