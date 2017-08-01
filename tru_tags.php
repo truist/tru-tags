@@ -64,7 +64,9 @@ define('AUTOCOMPLETE_IN_WRITE_TAB', 'autocomplete_in_write_tab');
 define('UTF_8_CASE', 'utf_8_case');
 
 global $tru_tags_prefs;
+global $tru_tags_query_cache;
 $tru_tags_prefs = tru_tags_load_prefs();
+$tru_tags_query_cache = array();
 
 
 ### TAG REGISTRATION ###
@@ -316,6 +318,7 @@ function tru_tags_get_standard_cloud_atts($atts, $isList, $isArticle, $showAll=f
 
 
 function tru_tags_cloud_query($atts) {
+	global $tru_tags_query_cache;
 	extract($atts);
 
 	$section_clause = '';
@@ -348,7 +351,13 @@ function tru_tags_cloud_query($atts) {
 	}
 
 	$all_tags = array();
-	$rs = safe_rows("$tags_field", "textpattern", "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4'" . $time);
+	$query_where = "$tags_field <> ''" . $section_clause . $filter . " and Status >= '4'" . $time;
+	if (array_key_exists($query_where, $tru_tags_query_cache)) {
+		$rs = $tru_tags_query_cache[$query_where];
+	} else {
+		$rs = safe_rows("$tags_field", "textpattern", $query_where);
+		$tru_tags_query_cache[$query_where] = $rs;
+	}
 	foreach ($rs as $row) {
 		$temp_array = array();
 		if (isset($row[$tags_field])) {
