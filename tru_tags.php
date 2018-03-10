@@ -733,7 +733,7 @@ function tru_tags_admin_tab_render_page($results, $cloud, $redirects) {
 				).
 				tr(
 					tda(gTxt('Autocomplete tags on the "Write" page').': <br>'.
-						'<em>(requires that the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-autocomplete/">jQuery Autocomplete plugin</a> <code>.css</code> and <code>.min.js</code> files be uploaded into a "<code>js</code>" folder on your site)</em>',
+			 			'<em>(you can adjust the appearance via <code>css/jquery-ui.css</code>)</em>',
 						' style="vertical-align:middle"').
 					td(yesnoRadio(AUTOCOMPLETE_IN_WRITE_TAB, $tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value))
 				).
@@ -951,15 +951,38 @@ EOF;
 	}
 
 	if ($tru_tags_prefs[AUTOCOMPLETE_IN_WRITE_TAB]->value) {
-		echo <<<EOF
-			<link rel="stylesheet" type="text/css" href="../js/jquery.autocomplete.css" media="projection, screen" />
-			<script src="../js/jquery.autocomplete.min.js" type="text/javascript"></script>
-			<script language="JavaScript" type="text/javascript"><!--
-				$(document).ready(function(){ var tags = new Array({$raw_cloud});
-					$("#keywords").autocomplete(tags, { multiple: true, mustMatch: false, autoFill: false });
-				});
-			//--></script>
-EOF;
+
+                          $output='<link rel="stylesheet" type="text/css" href="../css/jquery-ui.css" media="projection, screen" />
+        	    <script language="JavaScript" type="text/javascript"><!--
+        		$(document).ready(function(){ 
+        		    var availableTags = ['.$raw_cloud.'];
+        		    function split( val ) { return val.split( /,\s*/ ); }
+        		    function extractLast( term ) { return split( term ).pop(); }
+        		    $("#keywords").autocomplete({ minLength: 3, delay: 500,
+        		                                  source: function( request, response ) {
+        		                                            // delegate back to autocomplete, but extract the last term
+        		                                            response( $.ui.autocomplete.filter(
+        		                                              availableTags, extractLast( request.term ) ) );
+        		                                          },
+        		                                          focus: function() {
+        		                                            // prevent value inserted on focus
+        		                                            return false;
+        		                                          },
+        		                                          select: function( event, ui ) {
+        		                                            var terms = split( this.value );
+        		                                            // remove the current input
+        		                                            terms.pop();
+        		                                            // add the selected item
+        		                                            terms.push( ui.item.value );
+        		                                            // add placeholder to get the comma-and-space at the end
+        		                                            terms.push( "" );
+        		                                            this.value = terms.join( ", " );
+        		                                            return false;
+        		                                  }});
+        		});
+        		//--></script>';
+                           echo n.$output.n;
+
 	}
 
 }
