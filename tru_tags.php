@@ -515,7 +515,7 @@ function tru_tags_render_cloud($atts, $all_tags, $all_tags_for_weight) {
 		if ($title)
 			$titlecount = ' title="' . $title . '"';
 		$displaycount= '';
-		$count = $countwrapchars{0} . $weight . $countwrapchars{1};
+		$count = $countwrapchars[0] . $weight . $countwrapchars[1];
 		if ($showcounts == 'title' || $showcounts == 'both')
 			$titlecount = ' title="' . $title . $count . '"';
 		if ($showcounts && $showcounts != 'title')
