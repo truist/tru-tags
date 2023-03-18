@@ -38,8 +38,8 @@
 <ol>
 	<li>Go to the <a href="/reference/537/tru_tags-releases">releases page</a> to get the latest release.  Don&#8217;t save it &#8211; just open it in your browser.</li>
 	<li>Scroll down a slight bit and follow the on-page instructions: copy/paste the big square block of characters into your Textpattern install, under Admin -&gt; Plugins.</li>
-	<li>Hit ìUploadî.</li>
-	<li><strong>Remember to switch the plugin to ìActiveî in the plugin list.</strong></li>
+	<li>Hit ‚ÄúUpload‚Äù.</li>
+	<li><strong>Remember to switch the plugin to ‚ÄúActive‚Äù in the plugin list.</strong></li>
 </ol>
 
 <hr>
@@ -48,13 +48,13 @@
 
 <h4>Step 1: Create a new section</h4>
 
-<p>tru_tags depends on the existence of a special Textpattern section named ìtag,î by default<sup class="footnote" id="fnrev163861495258b0fde2547e7-1"><a href="#fn163861495258b0fde2547e7-1">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote" id="fnrev163861495258b0fde2547e7-2"><a href="#fn163861495258b0fde2547e7-2">2</a></sup>:</p>
+<p>tru_tags depends on the existence of a special Textpattern section named ‚Äútag,‚Äù by default<sup class="footnote" id="fnrev163861495258b0fde2547e7-1"><a href="#fn163861495258b0fde2547e7-1">1</a></sup>.  Create that section, using whatever settings you like.  (You won&#8217;t be publishing articles to that section.)  Here&#8217;s what I use<sup class="footnote" id="fnrev163861495258b0fde2547e7-2"><a href="#fn163861495258b0fde2547e7-2">2</a></sup>:</p>
 
 <p><txp:image id="2" class="diagram" /></p>
 
 <p class="footnote" id="fn163861495258b0fde2547e7-1"><sup>1</sup> You can use a different name, but you have to modify a setting in the plugin admin page to make  everything work correctly.  To do so, go to Extensions-&gt;tru_tags and update the Preferences.  </p>
 
-<p class="footnote" id="fn163861495258b0fde2547e7-2"><sup>2</sup> Note that I use the ëdefaultí page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
+<p class="footnote" id="fn163861495258b0fde2547e7-2"><sup>2</sup> Note that I use the ‚Äòdefault‚Äô page &#8211; that choice may not be right for you.  This section will be shown whenever you click on a tag, to display the tag search results.  You&#8217;ll want a page that has the correct layout/headers/footers.  I use my default page, with <code>&lt;txp:if_section name=&quot;tag&quot;&gt;</code> to change the page display in this case.  </p>
 
 <h4>Step 2: Call the plugin from that section</h4>
 
@@ -66,7 +66,7 @@
   &lt;txp:article /&gt;
 &lt;/txp:if_section&gt;</pre>
 
-<p>Note that <code>tru_tags_handler</code> uses the default ìsearch_formî form for rendering its output, or you can override this with the <code>form</code> attribute.</p>
+<p>Note that <code>tru_tags_handler</code> uses the default ‚Äúsearch_form‚Äù form for rendering its output, or you can override this with the <code>form</code> attribute.</p>
 
 <h4>Step 3: Configure your article form to display tags</h4>
 
@@ -86,7 +86,7 @@
 
 <h4>Step 5: Start tagging!</h4>
 
-<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the ìAdvanced Optionsî link on the left side of the ìWriteî page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn163861495258b0fde2547e7-1">1</a></sup>.  </p>
+<p>Whenever you write an article, put your tags into the Keywords field in Textpattern.  (The Keywords field hides behind the ‚ÄúAdvanced Options‚Äù link on the left side of the ‚ÄúWrite‚Äù page.)  Tags should be separated by commas, and can have spaces<sup class="footnote"><a href="#fn163861495258b0fde2547e7-1">1</a></sup>.  </p>
 
 <p>Make sure that your articles are in a section that is configured to be searchable.  <code>tru_tags</code> will filter out articles from sections that aren&#8217;t searchable.  This is a common question on the <a href="http://forum.textpattern.com/viewtopic.php?id=15084">forum</a>.  Please look there first if you are having problems or have any questions &#8211; they are often addressed there.</p>
 
@@ -100,21 +100,21 @@
 
 <p>You can use <code>tru_tags_if_tag_search</code>, <code>tru_tags_tag_parameter</code>, and <code>txp:search_term</code> to customize your page titles or tag search results.  See below for details.  For an example, do a tag search on this site and look at the titlebar.  </p>
 
-<p>If you don&#8217;t like the fact that all tags are shown in lowercase you can use <code>îtext-transform: capitalizeî</code> in your <span class="caps">CSS</span> stylesheet, in conjunction with an appropriate <code>class</code> attribute on your <code>tru_tags_cloud</code> call, to capitalize the tags.</p>
+<p>If you don&#8217;t like the fact that all tags are shown in lowercase you can use <code>‚Äùtext-transform: capitalize‚Äù</code> in your <span class="caps">CSS</span> stylesheet, in conjunction with an appropriate <code>class</code> attribute on your <code>tru_tags_cloud</code> call, to capitalize the tags.</p>
 
 <h4 id="customRSS">Customize your <span class="caps">RSS</span> and Atom feeds</h4>
 
 <p>By default, tru_tags includes article tags in the <span class="caps">RSS</span> and Atom feeds, using standard <span class="caps">XML</span> elements so that Technorati (and others) will discover the tags.  If you don&#8217;t want this behavior you can turn it off by updating the Preferences on the Extensions-&gt;tru_tags tab in the Textpattern admin.  </p>
 
-<p>tru_tags also supports adding article tags to the ëbodyí of the feeds.  That will let your readers see the tags also.  This is <strong>off by default</strong> to preserve backwards compatibility.  You can turn it on by editing the tru_tags preferences.  </p>
+<p>tru_tags also supports adding article tags to the ‚Äòbody‚Äô of the feeds.  That will let your readers see the tags also.  This is <strong>off by default</strong> to preserve backwards compatibility.  You can turn it on by editing the tru_tags preferences.  </p>
 
-<p>By default, the tags will show up at the end of your post in a paragraph that looks like ìtags: trees, flowers, animals, etcî (with links, and with <code>rel=&quot;tag&quot;</code>).  If you want to customize this display, simply create a new ëmiscí form (in the Textpattern admin) named ìtru_tags_feed_tagsî.  Anything you put into that form will be put into the ëbodyí of your <span class="caps">RSS</span>/Atom feed(s).  I suggest using something like this:</p>
+<p>By default, the tags will show up at the end of your post in a paragraph that looks like ‚Äútags: trees, flowers, animals, etc‚Äù (with links, and with <code>rel=&quot;tag&quot;</code>).  If you want to customize this display, simply create a new ‚Äòmisc‚Äô form (in the Textpattern admin) named ‚Äútru_tags_feed_tags‚Äù.  Anything you put into that form will be put into the ‚Äòbody‚Äô of your <span class="caps">RSS</span>/Atom feed(s).  I suggest using something like this:</p>
 
 <pre>&lt;txp:tru_tags_if_has_tags&gt;
 &lt;h4&gt;filed under: &lt;txp:tru_tags_from_article /&gt;&lt;/h4&gt;
 &lt;/txp:tru_tags_if_has_tags&gt;</pre>
 
-<p><strong>This feature is even more powerful, though.</strong>  You now have a generalized way to add content to your articles in your feeds.  I use my tru_tags_feed_tags form to add a ìRead more&#8230;î link to the articles, and to include all the user-posted comments in the feed.  I&#8217;m sure there are other uses.  </p>
+<p><strong>This feature is even more powerful, though.</strong>  You now have a generalized way to add content to your articles in your feeds.  I use my tru_tags_feed_tags form to add a ‚ÄúRead more&#8230;‚Äù link to the articles, and to include all the user-posted comments in the feed.  I&#8217;m sure there are other uses.  </p>
 
 <p>For reference, my complete tru_tags_feed_tags form contains:</p>
 
@@ -131,13 +131,13 @@
 
 <h4 id="archivepage">Create a tag-based archive page</h4>
 
-<p>This one is complicated, but quite useful.  The goal is to create an ëarchiveí page that shows all the articles associated with each tag in your cloud.  For example, <a href="/archive/">check out mine</a>.  </p>
+<p>This one is complicated, but quite useful.  The goal is to create an ‚Äòarchive‚Äô page that shows all the articles associated with each tag in your cloud.  For example, <a href="/archive/">check out mine</a>.  </p>
 
 <p>Creating a tag-based archive page is very similar to creating a <a href="http://textpattern.com/faq/134/how-do-i-make-an-archive-page">date-based archive page</a>, so this may be easiest if you follow <a href="http://textpattern.com/faq/134/how-do-i-make-an-archive-page">those instructions</a> first, and then convert over to a tag-based archive from there.  Or you might prefer to just follow these instructions:</p>
 
 <p>There are three main steps: create a new section, call <code>tru_tags_archive</code> from that section (specifying a custom <code>form</code>), and use <code>if_different</code> and <code>tru_tags_current_archive_tag</code> in your custom form to display the articles associated with each tag.  In detail:</p>
 
-<p><strong>Create a new section.</strong>  I named mine ìarchiveî and I used the default page, but you may need different settings.  Note that you could <em>probably</em> do this without a whole new section, by just calling <code>tru_tags_archive</code> from a specific article or page (e.g. if you wanted it in your site&#8217;s sidebar), but this is how I did it.  Here are my settings:</p>
+<p><strong>Create a new section.</strong>  I named mine ‚Äúarchive‚Äù and I used the default page, but you may need different settings.  Note that you could <em>probably</em> do this without a whole new section, by just calling <code>tru_tags_archive</code> from a specific article or page (e.g. if you wanted it in your site&#8217;s sidebar), but this is how I did it.  Here are my settings:</p>
 
 <p><txp:image id="28" class="diagram" /></p>
 
@@ -148,7 +148,7 @@
   &lt;txp:tru_tags_archive form=&quot;tag_archive&quot; /&gt;
 &lt;/txp:if_section&gt;</pre>
 
-<p>You&#8217;ll want to set the <code>form</code> attribute to the name of a form you haven&#8217;t created yet &#8211; so make something up that sounds about right (like ìtag_archiveî).</p>
+<p>You&#8217;ll want to set the <code>form</code> attribute to the name of a form you haven&#8217;t created yet &#8211; so make something up that sounds about right (like ‚Äútag_archive‚Äù).</p>
 
 <p>Some explanation: <code>tru_tags_archive</code> works by looping over all the tags in your tag cloud, and telling textpattern to search for all the associated articles, and render them &#8211; using the form you specified (with <code>form</code>).  In the next step, we&#8217;ll customize the way each article is rendered to make the output just look like a list of article titles, grouped by tag.  That&#8217;s the tricky part :)</p>
 
@@ -169,13 +169,13 @@
 <p><strong>One last (optional) step:</strong> double-check that the page title for your archive section actually says something useful.  Depending on how you manage your titles, it might not.</p>
 
 
-<h4 id="relatedtags">Show a ìrelated tagsî cloud</h4>
+<h4 id="relatedtags">Show a ‚Äúrelated tags‚Äù cloud</h4>
 
 <p>tru_tags has a feature that lets you show a cloud of tags that are related to the tags used in articles that are found by a tag search.  </p>
 
 <p>Got that?</p>
 
-<p>To see an example, do a tag search on this site.  (Click a link in the tag cloud.)  When the search results come up the sidebar will have a new section in it called ìRelated Tagsî.  The cloud in that section contains all the tags used by all the articles in the search result.  It&#8217;s a way to say ìthese other tags may be similar to the tag you just searchedî.  </p>
+<p>To see an example, do a tag search on this site.  (Click a link in the tag cloud.)  When the search results come up the sidebar will have a new section in it called ‚ÄúRelated Tags‚Äù.  The cloud in that section contains all the tags used by all the articles in the search result.  It&#8217;s a way to say ‚Äúthese other tags may be similar to the tag you just searched‚Äù.  </p>
 
 <p><strong>Before you use this on your site, however,</strong> you should read the detailed instructions (below) carefully.  This tag can have significant performance implications for your site, which your hosting provider might not be very happy about.</p>
 
@@ -191,7 +191,7 @@
 
 <h4 id="customadmin">Customize the tag display on the admin side</h4>
 
-<p>By default, tru_tags will show a list of tags on the ëWriteí tab, in the ëAdvanced Optionsí flyout, under the Keywords box, in the Textpattern admin.  </p>
+<p>By default, tru_tags will show a list of tags on the ‚ÄòWrite‚Äô tab, in the ‚ÄòAdvanced Options‚Äô flyout, under the Keywords box, in the Textpattern admin.  </p>
 
 <p><txp:image id="13" class="diagram" /></p>
 
@@ -205,13 +205,13 @@
 
 <h4 id="adminauto">Turn on tag auto-completion on the admin side</h4>
 
-<p>If you have the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-autocomplete/">jQuery Autocomplete plugin</a> installed, tru_tags can auto-complete tag names in the Keywords field on the Write tab.  In order for this to work, the <code>jquery.autocomplete.css</code> and <code>jquery.autocomplete.min.js</code> files have to be installed in a ìjsî folder at the root of your site.  Once that is done, you will also need to turn on the feature using one of the configuration options on the plugin Extension tab (in the admin side).</p>
+<p>If you have the <a href="http://bassistance.de/jquery-plugins/jquery-plugin-autocomplete/">jQuery Autocomplete plugin</a> installed, tru_tags can auto-complete tag names in the Keywords field on the Write tab.  In order for this to work, the <code>jquery.autocomplete.css</code> and <code>jquery.autocomplete.min.js</code> files have to be installed in a ‚Äújs‚Äù folder at the root of your site.  Once that is done, you will also need to turn on the feature using one of the configuration options on the plugin Extension tab (in the admin side).</p>
 
 <h4 id="ongoingmaint">Ongoing tag maintenance</h4>
 
 <p>Over time, you may find yourself with a number of articles that you&#8217;d like to re-tag, but with no easy way to update the tags on all those articles at once.  See the Extensions-&gt;tru_tags page for a few tools that can help you with that.  </p>
 
-<p>That tab also has a feature that will allow you to redirect out-of-date tag searches to newer tags.  For example, if you had been using a ìnetbsdî tag, but then deleted it, search engines might still have the link to the old tag search <span class="caps">URL</span>.  You can use the Redirections feature to tell tru_tags to redirect all searches for the ìnetbsdî tag to the ìgeekî tag instead.  If you don&#8217;t set a Redirect, tru_tags will generate the standard 404 page (unless you have overridden this behavior &#8211; see below).</p>
+<p>That tab also has a feature that will allow you to redirect out-of-date tag searches to newer tags.  For example, if you had been using a ‚Äúnetbsd‚Äù tag, but then deleted it, search engines might still have the link to the old tag search <span class="caps">URL</span>.  You can use the Redirections feature to tell tru_tags to redirect all searches for the ‚Äúnetbsd‚Äù tag to the ‚Äúgeek‚Äù tag instead.  If you don&#8217;t set a Redirect, tru_tags will generate the standard 404 page (unless you have overridden this behavior &#8211; see below).</p>
 
 <h4 id="customsettings">Admin-side settings</h4>
 
@@ -225,7 +225,7 @@
 
 <h4 id="tru_tags_handler"><code>tru_tags_handler</code></h4>
 
-<p>This is the main function that drives tag search and shows the generic tag cloud.  It should be called from the page that is used in the ëtagí section.  It usually calls <code>doArticles()</code> (in the Textpattern code) to display tag search results, but if no tag was passed in the url it will call <code>tru_tags_cloud</code> instead.</p>
+<p>This is the main function that drives tag search and shows the generic tag cloud.  It should be called from the page that is used in the ‚Äòtag‚Äô section.  It usually calls <code>doArticles()</code> (in the Textpattern code) to display tag search results, but if no tag was passed in the url it will call <code>tru_tags_cloud</code> instead.</p>
 
 <p>This tag accepts most of the standard <code>txp:article</code> <a href="http://textpattern.net/wiki/index.php?title=Txp:article_/">attributes</a>, which will be applied during the tag search.  Note that <code>tru_tags_handler</code> <strong>does not</strong> support using multiple sections with the <code>section</code> attribute, when doing a tag search.  If multiple sections are passed, none are used.</p>
 
@@ -249,7 +249,7 @@
 	<li><code>wraptag</code>, <code>break</code>, <code>class</code>, and <code>breakclass</code> attributes<sup class="footnote"><a href="#fn163861495258b0fde2547e7-1">1</a></sup>, as defined by Textpattern.</li>
 	<li><code>generatelinks=&quot;0&quot;</code> will show the tags without generating links</li>
 	<li><code>linkpath</code> can be used to generate tag links that don&#8217;t go to the default location.  For example, setting <code>linkpath=&quot;http://technorati.com/tag/&quot;</code> will cause tru_tags to generate tag links like <code>http://technorati.com/tag/sometag</code>.</li>
-	<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a ì/î on the end of the generated <code>linkpath</code> url.</li>
+	<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a ‚Äú/‚Äù on the end of the generated <code>linkpath</code> url.</li>
 	<li><code>texttransform</code> can be used to change the capitalization of the tags.  By default, tags will be displayed in lowercase, which is equivalent to setting this attribute to <code>lowercase</code>.  You can also set <code>texttransform</code> to <code>capitalize</code> (Like This), <code>uppercase</code> (<span class="caps">LIKE</span> <span class="caps">THIS</span>), or <code>capfirst</code> (Like this).</li>
 	<li><code>title</code> can be used to set the tooltip for all the tags.</li>
 	<li><code>usenofollow=&quot;1&quot;</code> will turn on <a href="http://googleblog.blogspot.com/2005/01/preventing-comment-spam.html"><code>rel=&quot;nofollow&quot;</code></a> in the links.  This is off by default.</li>
@@ -277,7 +277,7 @@
 
 <p><code>tru_tags_cloud</code> and <code>tru_tags_list</code> both set the <code>class</code> attribute of each tag, specifying two (or three) classes.  The first class groups the tags into categories, with classes of <code>tagSizeSmallest</code>, <code>tagSizeMedium</code>, and <code>tagSizeLargest</code>.  Using these, you could make the smallest and largest tags have different styles than all the others.</p>
 
-<p>The second class indicates the ìstepî of the current tag, with classes of <code>tagSize1</code>, <code>tagSize2</code>, and so on.  These give you precise control over each tag size, if you want it.</p>
+<p>The second class indicates the ‚Äústep‚Äù of the current tag, with classes of <code>tagSize1</code>, <code>tagSize2</code>, and so on.  These give you precise control over each tag size, if you want it.</p>
 
 <p>The third class is only set on one tag, if you are currently on a tag search page.  The current tag under search is given a class of <code>tagActive</code> (by default), or to whatever you set in the <code>activeclass</code> attribute.</p>
 
@@ -290,10 +290,10 @@
 	<li><code>activeclass</code> can be used to specify the class that should be given to the tag currently under search, on a tag search page.</li>
 	<li><code>countwrapchars</code>, which controls the characters used to show the tag count, if <code>showcounts</code> is turned on.  By default this is <code>[]</code>.  The first character will be put on the left side of the number, and the second character will be put on the right.  For example <code>countwrapchars=&quot;()&quot;</code> would show: <span class="pre"><a href="/?s=tag&amp;t=life">life</a> (3), <a href="/?s=tag&amp;t=tech">tech</a> (5)</span></li>
 	<li><code>excludesection</code> can be set to a section or a list of sections that should be excluded from the tag cloud.  This is an alternate to the <code>section</code> attribute, below, which is used to limit the tags to those from a specific set of sections.</li>
-	<li><code>filtersearch=&quot;0&quot;</code> will tell tru_tags to change its default behavior and include tags from all sections the tag cloud, ignoring the ìInclude in site search?î setting that the site administrator can set on the ìSectionsî tab (under ìPresentationî).  By default, tru_tags will filter out any section that is set to ìNoî on that tab.  Note that you can still use the <code>excludesection</code> attribute to exclude specific sections from the cloud.</li>
+	<li><code>filtersearch=&quot;0&quot;</code> will tell tru_tags to change its default behavior and include tags from all sections the tag cloud, ignoring the ‚ÄúInclude in site search?‚Äù setting that the site administrator can set on the ‚ÄúSections‚Äù tab (under ‚ÄúPresentation‚Äù).  By default, tru_tags will filter out any section that is set to ‚ÄúNo‚Äù on that tab.  Note that you can still use the <code>excludesection</code> attribute to exclude specific sections from the cloud.</li>
 	<li><code>generatelinks=&quot;0&quot;</code> will show the tags without generating links</li>
 	<li><code>linkpath=&quot;http://technorati.com/tag/&quot;</code> will cause tru_tags to generate tag links like <code>http://technorati.com/tag/sometag</code>.</li>
-	<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a ì/î on the end of the generated <code>linkpath</code> url.</li>
+	<li><code>linkpathtail</code> can be used to specify a suffix for the <code>linkpath</code>-based link.  For example, setting <code>linkpathtail=&quot;/&quot;</code> will put a ‚Äú/‚Äù on the end of the generated <code>linkpath</code> url.</li>
 	<li><code>listlimit</code> will limit the tag cloud to the specified number of tags.  By default, it will keep the tags that are most frequently used (and discard the infrequently-used ones). It will not necessarily show exactly the number of tags specified, though.  For example, if you set <code>listlimit=&quot;10&quot;</code> and your site has 3 tags that have been used 10 times and 4 tags that have been used 7 times and 8 tags that have been used 3 times, the cloud will only show the top 7 tags, because it wasn&#8217;t able to fit the last set of 8 into the limit of 10.  This behavior can be changed with the following attributes:
 	<ul>
 		<li><code>cutoff=&quot;exact&quot;</code> will tell <code>listlimit</code> to show exactly the number of tags you specify.</li>
@@ -303,7 +303,7 @@
 	</ul></li>
 	<li><code>minpercent</code> and <code>maxpercent</code>, which can be used to control the weighted font sizes in the tag cloud/list.  <code>tru_tags_cloud</code> defaults to <code>100</code> and <code>200</code>, respectively, and <code>tru_tags_list</code> defaults to <code>100</code> and <code>100</code>.</li>
 	<li><code>mintagcount</code> and <code>maxtagcount</code> can be used to hide tags that only have a few articles, or that have too many.  They are defaulted to <code>0</code> and <code>1000</code>, respectively.  For example, <code>mintagcount=&quot;2&quot;</code> would hide any tags that were only associated with a single article.  If you do this, you may want to add a link to the default tag cloud, usually found at <code>/tag/</code>.</li>
-	<li><code>section</code>, which tells it to limit the list to tags from the given section or sections.  For example, <code>&lt;txp:tru_tags_cloud section=&quot;blog,reference&quot; /&gt;</code> would only show tags from the ìblogî and ìreferenceî sections.  By default, this is set to blank (to show tags from all sections).
+	<li><code>section</code>, which tells it to limit the list to tags from the given section or sections.  For example, <code>&lt;txp:tru_tags_cloud section=&quot;blog,reference&quot; /&gt;</code> would only show tags from the ‚Äúblog‚Äù and ‚Äúreference‚Äù sections.  By default, this is set to blank (to show tags from all sections).
 	<ul>
 		<li><strong>Note:</strong> if you use <code>section</code> to limit the cloud to a particular section, it won&#8217;t limit the tag search feature to that section.  The tag search finds (tagged) articles from all sections, no matter what.  That&#8217;s a side-effect of the use of <code>doArticles()</code>, and I don&#8217;t think there&#8217;s anything I can do about it.</li>
 	</ul></li>
@@ -335,12 +335,12 @@
 <h5>Attributes:</h5>
 
 <ul>
-	<li><code>tag</code> will let you check if the search is for a specific tag (like tag=ìtru_tagsî)</li>
+	<li><code>tag</code> will let you check if the search is for a specific tag (like tag=‚Äútru_tags‚Äù)</li>
 </ul>
 
 <h4 id="tru_tags_tag_parameter"><code>tru_tags_tag_parameter</code></h4>
 
-<p>This tag returns the tag (keyword) you are searching for. This way it is possible to render the ëkeywordí searched for on a ëtag search result pageí (/tag/keyword). This is generally used with <code>tru_tags_if_tag_search</code>.</p>
+<p>This tag returns the tag (keyword) you are searching for. This way it is possible to render the ‚Äòkeyword‚Äô searched for on a ‚Äòtag search result page‚Äô (/tag/keyword). This is generally used with <code>tru_tags_if_tag_search</code>.</p>
 
 <h5>Attributes:</h5>
 
@@ -366,7 +366,7 @@
 
 <h4 id="tru_tags_related_tags_from_search"><code>tru_tags_related_tags_from_search</code></h4>
 
-<p>This tag is useful on the results page of a tag search.  It generates a cloud of all the tags that are used by the articles found in that search, excluding the search tag itself.  For example, if a tag search for ìlifeî found three articles that were tagged as follows:</p>
+<p>This tag is useful on the results page of a tag search.  It generates a cloud of all the tags that are used by the articles found in that search, excluding the search tag itself.  For example, if a tag search for ‚Äúlife‚Äù found three articles that were tagged as follows:</p>
 
 <ol>
 	<li>money, health, life</li>
@@ -374,11 +374,11 @@
 	<li>life</li>
 </ol>
 
-<p>&#8230;<code>tru_tags_related_tags_from_search</code> would generate a cloud containing ìmoneyî, ìhealthî, and ìpoliticsî.</p>
+<p>&#8230;<code>tru_tags_related_tags_from_search</code> would generate a cloud containing ‚Äúmoney‚Äù, ‚Äúhealth‚Äù, and ‚Äúpolitics‚Äù.</p>
 
-<p>This is useful for generating a ìrelated tagsî cloud, as you can see in the sidebar of this site when you do a tag search.</p>
+<p>This is useful for generating a ‚Äúrelated tags‚Äù cloud, as you can see in the sidebar of this site when you do a tag search.</p>
 
-<p><strong>Before you use this on your site, however,</strong> be warned that it&#8217;s not good for your site&#8217;s performance, and it&#8217;s a little bit of a hack (and therefore may break with newer versions of Textpattern).  It is implemented by completely redoing the database query that found all the articles in the first place, which means that your site is essentially performing the search twice.  Then, depending on the attributes you use, it may do a second query that is equivalent to the query that generates the ìcompleteî tag cloud.  </p>
+<p><strong>Before you use this on your site, however,</strong> be warned that it&#8217;s not good for your site&#8217;s performance, and it&#8217;s a little bit of a hack (and therefore may break with newer versions of Textpattern).  It is implemented by completely redoing the database query that found all the articles in the first place, which means that your site is essentially performing the search twice.  Then, depending on the attributes you use, it may do a second query that is equivalent to the query that generates the ‚Äúcomplete‚Äù tag cloud.  </p>
 
 <p>You may want to test this carefully if you have a hosting provider who charges you for <span class="caps">CPU</span> cycles.  :)</p>
 
@@ -391,7 +391,7 @@
 	<li>All the attributes of <code>tru_tags_cloud</code> / <code>tru_tags_list</code>.</li>
 	<li><code>useoverallcounts</code>, which makes the cloud render using the frequency data for the site-wide tag cloud.
 	<ul>
-		<li>By default, <code>tru_tags_related_tags_from_search</code> outputs a cloud where the weights are based on the frequency of the tags <em>in the search results</em>.  Using the example from above, ìmoneyî would have a weight that was double the weight of ìhealthî and ìpoliticsî.</li>
+		<li>By default, <code>tru_tags_related_tags_from_search</code> outputs a cloud where the weights are based on the frequency of the tags <em>in the search results</em>.  Using the example from above, ‚Äúmoney‚Äù would have a weight that was double the weight of ‚Äúhealth‚Äù and ‚Äúpolitics‚Äù.</li>
 		<li>This attribute will change that behavior, making the tag sizes match the sizes used in the site-wide tag cloud.  In other words, this cloud will look exactly like a subset of your sitewide cloud.</li>
 		<li>It will also add an extra database query to the mix (mentioned above), so consider performance carefully before using it.</li>
 	</ul></li>
